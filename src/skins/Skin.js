@@ -71,7 +71,7 @@ define([
         this.name = name
       this.options = options
 
-      if(this.options.skinId)
+      if (this.options.skinId)
         this.skinId = this.options.skinId;
 
       if (!Skin.registerStyleSheet(this.skinId, ps)) {
@@ -101,9 +101,9 @@ define([
           .append(this.$progress))
       this.$playerCnt.append(this.$waitPanel)
 
-      this.buttons = Utils.cloneObject(Skin.prototype.buttons)
-      this.counters = Utils.cloneObject(Skin.prototype.counters)
-      this.msgArea = Utils.cloneObject(Skin.prototype.msgArea)
+      this.buttons = Object.assign({}, Skin.prototype.buttons);
+      this.counters = Object.assign({}, Skin.prototype.counters);
+      this.msgArea = Object.assign({}, Skin.prototype.msgArea);
 
       // Create dialog overlay and panel
       this.$dlgOverlay = $('<div/>', { class: 'dlgOverlay' }).css({

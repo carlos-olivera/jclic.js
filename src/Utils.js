@@ -240,7 +240,8 @@ define([
      */
     getXmlText: xml => {
       let text = ''
-      $(xml).children('p').each((_n, child) => { text += `<p>${child.textContent}</p>` })
+      // WOJQ: $(xml).children('p').each((_n, child) => { text += `<p>${child.textContent}</p>` })
+      xml.querySelectorAll('p').forEach(p => text += `<p>${p.textContent}</p>`);
       return text
     },
     /**
@@ -333,14 +334,6 @@ define([
       }
       return false
     },
-    /**
-     * Clones the provided object
-     * See: https://stackoverflow.com/questions/41474986/how-to-clone-a-javascript-es6-class-instance
-     * @param {object} obj
-     * @returns {object}
-     */
-    //cloneObject: obj => Object.assign(Object.create(Object.getPrototypeOf(obj)), obj),
-    cloneObject: obj => $.extend(true, Object.create(Object.getPrototypeOf(obj)), obj),
     /**
      * Converts string values to number or boolean when needed
      * @param {Object} obj - The object to be processed

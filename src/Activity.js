@@ -171,7 +171,7 @@ define([
                     break
 
                   case 'helpWindow':
-                    this.helpMsg = Utils.getXmlText(this)
+                    this.helpMsg = Utils.getXmlText(child)
                     this.showSolution = Utils.getBoolean($node.attr('showSolution'), false)
                     this.helpWindow = this.helpMsg !== null || this.showSolution
                     break

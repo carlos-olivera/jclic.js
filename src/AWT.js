@@ -268,6 +268,16 @@ define([
         this.italic === font.italic &&
         this.variant === font.variant
     }
+
+    /**
+     * Clones this Font object
+     * @returns {Font} - An autonomous clone of this Font
+     */
+    cloneObject() {
+      const result = new Font(this.family, this.size, this.bold, this.italic, this.variant);
+      Object.assign(result._metrics, this._metrics);
+      return result;
+    }
   }
 
   /**

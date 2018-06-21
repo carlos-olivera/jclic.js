@@ -144,8 +144,14 @@ define([
       else if (this.parent !== null)
         return this.parent.getOwn(property)
       else {
-        if (typeof this[property] === 'object')
-          this[property] = Utils.cloneObject(BoxBase.prototype[property])
+        // Clone prototype attribute
+        if (typeof this[property] === 'object') {
+          // WOJQ - this[property] = Utils.cloneObject(BoxBase.prototype[property])
+          if (typeof this[property].cloneObject === 'function')
+            this[property] = this[property].cloneObject();
+          else
+            this[property] = Object.assign({}, this[property]);
+        }
         else
           this[property] = BoxBase.prototype[property]
       }
