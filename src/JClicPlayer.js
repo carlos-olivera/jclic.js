@@ -484,7 +484,9 @@ define([
         }
 
         // Step two: load the ActivitySequenceElement
-        if (!Utils.isNullOrUndef(sequence)) {
+        
+        // Check for null or undefined, but consider `0` a valid value
+        if (sequence != null) {
           Utils.log('info', `Loading sequence: ${sequence}`)
           this.navButtonsDisabled = false
           // Try to load sequence by tag

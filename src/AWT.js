@@ -31,10 +31,9 @@
 /* global define */
 
 define([
-  "jquery",
   "./Utils",
   "webfontloader"
-], function ($, Utils, WebFont) {
+], function (Utils, WebFont) {
 
   /**
    * This object contains utility clases for painting graphics and images,
@@ -76,11 +75,11 @@ define([
     /**
      * Finds the XML elements with typeface specifications, checks its value against the font
      * substitution list, replacing the `family` attribute and loading the alternative font when needed.
-     * @param {external:jQuery} $tree - The xml element to be processed
+     * @param {HTMLElement} $tree - The xml element to be processed
      * @param {Object=} options - Optional param that can contain a `fontSubstitutions` attribute with
      * a substition table to be added to {@link Font.SUBSTITUTIONS}
      */
-    static checkTree($tree, options) {
+    static checkTree(tree, options) {
       let substitutions = Font.SUBSTITUTIONS
       // Load own fonts and remove it from the substitution table
       if (options && options.ownFonts) {
@@ -95,21 +94,31 @@ define([
       }
 
       // Add custom font substitutions
-      if (options && options.fontSubstitutions)
-        //substitutions = Object.assign({}, substitutions, options.fontSubstitutions)
-        substitutions = $.extend(Object.create(substitutions), options.fontSubstitutions)
+      if (options && typeof options.fontSubstitutions === 'object')
+        substitutions = Object.assign({}, substitutions, options.fontSubstitutions);
 
-      $tree.find('style[family],font[family]').each((_n, style) => {
-        const $style = $(style),
-          name = $style.attr('family').trim().toLowerCase()
+      // Check for elements with 'family' attribute
+      tree.querySelectorAll('style[family],font[family]').forEach(style => {
+        //$tree.find('style[family],font[family]').each((_n, style) => {
+        const name = style.getAttribute('family').trim().toLowerCase();
         if (name in substitutions) {
-          const newName = substitutions[name]
+          const newName = substitutions[name];
           if (newName !== '') {
-            Font.loadGoogleFont(newName)
-            $style.attr('family', newName)
+            Font.loadGoogleFont(newName);
+            style.setAttribute('family', newName);
           }
         }
       })
+
+      // Check also if default font must be replaced
+      const name = Font.prototype.family.toLowerCase();
+      if (name in substitutions) {
+        const newName = substitutions[name];
+        if (newName !== '') {
+          Font.loadGoogleFont(newName);
+          Font.prototype.family = newName;
+        }
+      }
     }
 
     /**
@@ -238,22 +247,27 @@ define([
      * @returns {Font}
      */
     _calcHeight() {
-      const
-        $text = $('<span/>').html('Hg').css(this.toCss()),
-        $block = $('<div/>').css({ display: 'inline-block', width: '1px', height: '0px' }),
-        $div = $('<div/>').append($text, $block)
+      // Build a sample text span with a tall letter (H) and a letter that extends below the baseline (g)
+      const text = Utils.HTML.element('span', 'Hg', null, this.toCss());
+      // Build an inline block with just one pixel, used as a reference to the baseline
+      const block = Utils.HTML.element('div', null, null, { display: 'inline-block', width: '1px', height: '0px' });
+      // Fake div containing both elements
+      const div = Utils.HTML.element('div');
+      div.append(text, block);
 
-      $('body').append($div)
+      // Place the div on the document and measure relative offsets
+      document.body.append(div);
       try {
-        $block.css({ verticalAlign: 'baseline' })
-        this._metrics.ascent = $block.offset().top - $text.offset().top
-        $block.css({ verticalAlign: 'bottom' })
-        this._metrics.height = $block.offset().top - $text.offset().top
-        this._metrics.descent = this._metrics.height - this._metrics.ascent
+        Utils.HTML.css(block, { verticalAlign: 'baseline' });
+        this._metrics.ascent = block.offsetTop - text.offsetTop;
+        Utils.HTML.css(block, { verticalAlign: 'bottom' });
+        this._metrics.height = block.offsetTop - text.offsetTop;
+        this._metrics.descent = this._metrics.height - this._metrics.ascent;
       } finally {
-        $div.remove()
+        // Remove the div element
+        div.remove();
       }
-      return this
+      return this;
     }
 
     /**

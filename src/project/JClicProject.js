@@ -72,6 +72,7 @@ define([
      * @returns {JClicProject}
      */
     setProperties($xml, path, zip, options) {
+      const xml = $xml[0];
       if (path) {
         this.path = path
         if (path.file)
@@ -94,7 +95,8 @@ define([
       const ownFonts = this.mediaBag.getElementsOfType('font')
       if (ownFonts.length > 0)
         options.ownFonts = (options.ownFonts || []).concat(ownFonts)
-      AWT.Font.checkTree($acts, options)
+      AWT.Font.checkTree(xml.querySelector('activities'), options)
+      //AWT.Font.checkTree($acts, options)
       $acts.each((_n, act) => {
         const $act = $(act)
         this._activities[Utils.nSlash($act.attr('name'))] = $act

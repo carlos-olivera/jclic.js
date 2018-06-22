@@ -350,7 +350,8 @@ define([
         //
         // Allowed types are: `initial`, `final`, `previous`, `finalError`
         msg.type = $xml.attr('type')
-        if (Utils.isNullOrUndef(msg.bb))
+        // Check for `null` or `undefined`
+        if (msg.bb == null)
           msg.bb = new BoxBase(null)
         return msg
       }
@@ -725,7 +726,7 @@ define([
       /**
        * The main document used in text activities
        * @name Activity#document
-       * @type {TextActivityDocument} */      
+       * @type {TextActivityDocument} */
       document: null,
       /**
        * Relative position of the text grid (uses the same position codes as box grids)

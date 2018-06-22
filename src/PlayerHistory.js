@@ -174,13 +174,14 @@ define([
      * allowing to return to the current activity.
      */
     jumpToSequence(sequence, path, allowReturn) {
-      if (Utils.isNullOrUndef(sequence) && Utils.isNullOrUndef(path))
+      // Use of `==` and `!=` for checking if value is `null` or `undefined` (0 and '' are valid values)
+      if (sequence == null && path == null)
         return false
-      if (Utils.isNullOrUndef(path))
+      if (path == null)
         path = this.player.project.path
       if (this.sequenceStack.length > 0) {
         const e = this.sequenceStack[this.sequenceStack.length - 1]
-        if (!Utils.isNullOrUndef(sequence) && path === e.projectPath) {
+        if (sequence != null && path === e.projectPath) {
           let same = sequence === e.sequence
           if (path === this.player.project.path) {
             const ase = this.player.project.activitySequence.getElement(e.activity, false)

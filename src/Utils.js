@@ -31,7 +31,6 @@
 /* global define */
 
 define([
-  "jquery",
   "screenfull",
   "clipboard-js",
   "i18next",
@@ -39,7 +38,7 @@ define([
   "jszip-utils",
   "scriptjs",
   "webfontloader"
-], function ($, screenfull, clipboard, i18next, JSZip, JSZipUtils, ScriptJS, WebFont) {
+], function (screenfull, clipboard, i18next, JSZip, JSZipUtils, ScriptJS, WebFont) {
 
   // In some cases, require.js does not return a valid value for screenfull. Check it:
   if (!screenfull)
@@ -71,7 +70,6 @@ define([
     pkg: {
       ClipboardJS: clipboard,
       i18next: i18next,
-      $: $,
       JSZip: JSZip,
       JSZipUtils: JSZipUtils,
       ScriptJS: ScriptJS,
@@ -80,7 +78,7 @@ define([
     /**
      * Function obtained from `i18next` that will return the translation of the provided key
      * into the current language.
-     * The real function will be initiated by the constructor of `JClicPlayer`. Meanwhile, it returns always `key`.
+     * The real function will be initiated by the constructor of `JClicPlayer`. Meanwhile, it just returns `key`.
      * @param {string} key - ID of the expression to be translated
      * @returns {string} - Translated text
      */
@@ -114,14 +112,14 @@ define([
      * @returns {object} The normalized `options` object
      */
     init: options => {
-      options = Utils.normalizeObject(options)
-      if (typeof options.logLevel !== 'undefined')
-        Utils.setLogLevel(options.logLevel)
+      Utils.normalizeObject(options);
+      if (options.logLevel != null)
+        Utils.setLogLevel(options.logLevel);
       if (typeof options.chainLogTo === 'function')
-        Utils.LOG_OPTIONS.chainTo = options.chainLogTo
+        Utils.LOG_OPTIONS.chainTo = options.chainLogTo;
       if (typeof options.pipeLogTo === 'function')
-        Utils.LOG_OPTIONS.pipeTo = options.pipeLogTo
-      return options
+        Utils.LOG_OPTIONS.pipeTo = options.pipeLogTo;
+      return options;
     },
     /**
      * Establishes the current verbosity level of the logging system
@@ -219,12 +217,6 @@ define([
      */
     fillString: (tag, repeats = 0) => Array(repeats).fill(tag).join(''),
     /**
-     * Checks if the provided value is 'null' or 'undefined'.
-     * @param {*} val - The value to be parsed
-     * @returns {boolean}
-     */
-    isNullOrUndef: val => typeof val === 'undefined' || val === null,
-    /**
      * Checks if two expressions are equivalent.
      * Returns `true` when both parameters are `null` or `undefined`, and also when both have
      * equivalent values.
@@ -240,7 +232,6 @@ define([
      */
     getXmlText: xml => {
       let text = ''
-      // WOJQ: $(xml).children('p').each((_n, child) => { text += `<p>${child.textContent}</p>` })
       xml.querySelectorAll('p').forEach(p => text += `<p>${p.textContent}</p>`);
       return text
     },
@@ -336,19 +327,15 @@ define([
     },
     /**
      * Converts string values to number or boolean when needed
-     * @param {Object} obj - The object to be processed
-     * @returns {Object} - A new object with normalized content
+     * @param {Object} obj - A simple object to be processed
      */
     normalizeObject: obj => {
-      const result = {}
       if (obj)
-        $.each(obj, (key, value) => {
-          let s
-          if (typeof value === 'string' && (s = value.trim().toLowerCase()) !== '')
-            value = s === 'true' ? true : s === 'false' ? false : isNaN(s) ? value : Number(s)
-          result[key] = value
+        Object.keys(obj).forEach(k => {
+          let s, v = obj[k];
+          if (typeof v === 'string' && (s = v.trim().toLowerCase()) !== '')
+            obj[k] = s === 'true' ? true : s === 'false' ? false : isNaN(s) ? v : Number(s);
         })
-      return result
     },
     /**
      * Check if the given char is a separator
@@ -463,11 +450,25 @@ define([
      * Utility object that provides several methods to build simple and complex DOM objects
      * @type {object}
      */
-    $HTML: {
-      doubleCell: (a, b) => $('<tr/>').append($('<td/>').html(a)).append($('<td/>').html(b)),
-      p: txt => $('<p/>').html(txt),
-      td: (txt, className) => $('<td/>', className ? { class: className } : null).html(txt),
-      th: (txt, className) => $('<th/>', className ? { class: className } : null).html(txt),
+    HTML: {
+      element: (type, content = null, className = null, css = null) => {
+        const result = document.createElement(type);
+        if (result && className)
+          result.className = className;
+        if (result && content)
+          result.innerHTML = content;
+        if (result && css)
+          Utils.HTML.css(result, css);
+        return result;
+      },
+      css: (element, styles) => {
+        Object.keys(styles).forEach(k => element.style[k] = styles[k]);
+        return element;
+      },
+      doubleCell: (a, b) => Utils.HTML.element('tr', `<td>${a}</td><td>${b}</td>`),
+      p: txt => Utils.HTML.element('p', txt),
+      td: (txt, className) => Utils.HTML.element('td', txt, className),
+      th: (txt, className) => Utils.HTML.element('th', txt, className),
     },
     /**
      * Checks if the current browser allows to put HTML elements in full screen mode
@@ -746,7 +747,8 @@ define([
      * indicates a cursor position.
      */
     setSelectionRange: (el, start, end) => {
-      if (Utils.isNullOrUndef(end))
+      // Check for `null` or `undefined`
+      if (end == null)
         end = start
       if (document.createRange && window.getSelection) {
         const range = document.createRange()
