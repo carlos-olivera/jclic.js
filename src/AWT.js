@@ -75,7 +75,7 @@ define([
     /**
      * Finds the XML elements with typeface specifications, checks its value against the font
      * substitution list, replacing the `family` attribute and loading the alternative font when needed.
-     * @param {HTMLElement} $tree - The xml element to be processed
+     * @param {HTMLElement} tree - The xml element to be processed
      * @param {Object=} options - Optional param that can contain a `fontSubstitutions` attribute with
      * a substition table to be added to {@link Font.SUBSTITUTIONS}
      */
@@ -99,7 +99,6 @@ define([
 
       // Check for elements with 'family' attribute
       tree.querySelectorAll('style[family],font[family]').forEach(style => {
-        //$tree.find('style[family],font[family]').each((_n, style) => {
         const name = style.getAttribute('family').trim().toLowerCase();
         if (name in substitutions) {
           const newName = substitutions[name];
@@ -144,21 +143,21 @@ define([
 
     /**
      * Reads the properties of this Font from an XML element
-     * @param {external:jQuery} $xml - The xml element to be parsed
+     * @param {Element} xml - The xml element to be parsed
      * @returns {Font}
      */
-    setProperties($xml) {
-      if ($xml.attr('family'))
-        this.family = $xml.attr('family')
-      if ($xml.attr('size'))
-        this.size = Number($xml.attr('size'))
-      if ($xml.attr('bold'))
-        this.bold = Utils.getBoolean($xml.attr('bold'))
-      if ($xml.attr('italic'))
-        this.italic = Utils.getBoolean($xml.attr('italic'))
-      if ($xml.attr('variant'))
-        this.variant = $xml.attr('variant')
-      return this
+    setProperties(xml) {
+      if (xml.attributes.family)
+        this.family = xml.getAttribute('family');
+      if (xml.attributes.size)
+        this.size = Number(xml.getAttribute('size'));
+      if (xml.attributes.bold)
+        this.bold = Utils.getBoolean(xml.getAttribute('bold'));
+      if (xml.attributes.italic)
+        this.italic = Utils.getBoolean(xml.getAttribute('italic'));
+      if (xml.attributes.variant)
+        this.variant = xml.getAttribute('variant');
+      return this;
     }
 
     /**
@@ -207,8 +206,7 @@ define([
      * Translates the Font properties into CSS statements
      * @param {Object} css - The object where to add CSS properties. When null or undefined, a new
      * object will be created and returned.
-     * @returns {Object} - A set of CSS property-values pairs, ready to be used by JQuery
-     * [.css(properties)](http://api.jquery.com/css/#css-properties).
+     * @returns {Object} - A set of CSS property-value pairs
      */
     toCss(css) {
       if (!css)
@@ -387,15 +385,15 @@ define([
 
     /**
      * Reads the properties of this Gradient from an XML element
-     * @param {external:jQuery} $xml - The xml element to be parsed
+     * @param {Element} xml - The xml element to be parsed
      * @returns {Gradient}
      */
-    setProperties($xml) {
-      this.c1 = Utils.checkColor($xml.attr('source'), 'black')
-      this.c2 = Utils.checkColor($xml.attr('dest'), 'white')
-      this.angle = Number($xml.attr('angle') || 0) % 360
-      this.cycles = Number($xml.attr('cycles') || 1)
-      return this
+    setProperties(xml) {
+      this.c1 = Utils.checkColor(xml.getAttribute('source'), 'black');
+      this.c2 = Utils.checkColor(xml.getAttribute('dest'), 'white');
+      this.angle = Number(xml.getAttribute('angle') || 0) % 360;
+      this.cycles = Number(xml.getAttribute('cycles') || 1);
+      return this;
     }
 
     /**
@@ -544,13 +542,13 @@ define([
 
     /**
      * Reads the properties of this Point from an XML element
-     * @param {external:jQuery} $xml - The xml element to be parsed
+     * @param {Element} xml - The xml element to be parsed
      * @returns {Point}
      */
-    setProperties($xml) {
-      this.x = Number($xml.attr('x'))
-      this.y = Number($xml.attr('y'))
-      return this
+    setProperties(xml) {
+      this.x = Number(xml.getAttribute('x') || 0);
+      this.y = Number(xml.getAttribute('y') || 0);
+      return this;
     }
 
     /**
@@ -654,13 +652,13 @@ define([
 
     /**
      * Reads the properties of this Dimension from an XML element
-     * @param {external:jQuery} $xml - The xml element to be parsed
+     * @param {Element} xml - The xml element to be parsed
      * @returns {Dimension}
      */
-    setProperties($xml) {
-      this.width = Number($xml.attr('width'))
-      this.height = Number($xml.attr('height'))
-      return this
+    setProperties(xml) {
+      this.width = Number(xml.getAttribute('width') || 0);
+      this.height = Number(xml.getAttribute('height') || 0);
+      return this;
     }
 
     /**
@@ -1598,7 +1596,7 @@ define([
      * @example
      * const myFunc = () => { alert('Hello!') }
      * const myAction = new Action('hello', myFunc)
-     * $( "#foo" ).bind( "click", myAction.processEvent)
+     * document.querySelector("#foo").addEventListener('click', myAction.processEvent)
      * @param {object} event - The event object passed by the DOM event trigger
      */
     processEvent(event) {

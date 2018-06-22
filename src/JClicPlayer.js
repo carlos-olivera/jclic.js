@@ -64,10 +64,10 @@ define([
 
       /**
        * JClicPlayer constructor
-       * @param {external:jQuery} $topDiv - The HTML `div` element where this JClicPlayer will deploy.
+       * @param {HTMLElement} topDiv - The HTML `div` element where this JClicPlayer will deploy.
        * @param {object=} options - A set of optional customized options.
        */
-      constructor($topDiv, options) {
+      constructor(topDiv, options) {
 
         // JClicPlayer extends AWT.Container
         super()
@@ -78,23 +78,21 @@ define([
         // Generate unique ID
         this.id = `JC${(0x10000 + Math.round(Math.random() * 0xFFFF)).toString(16).toUpperCase().substr(1)}`
         // Identify the HTML element where this player will deploy
-        this.$topDiv = $topDiv || $('<div/>')
+        this.topDiv = topDiv || document.createElement('div');
         // Avoid side effects of 'align=center' in old HTML pages
-        this.$topDiv.css({ 'text-align': 'initial' })
+        this.topDiv.style['text-align'] = 'initial';
 
-        // Special case: $topDiv inside a TD (like in http://clic.xtec.cat/gali)
-        if (this.$topDiv.parent().is('td')) {
+        // Special case: topDiv inside a TD (like in http://clic.xtec.cat/gali)
+        if (this.topDiv.parentElement && this.topDiv.parentElement.tagName === 'TD') {
           // Set explicit width and height to fill-in the TD
-          this.$topDiv.css({
-            width: this.options.width || '100%',
-            height: this.options.height || '100%'
-          })
+          this.topDiv.style.width = '100%';
+          this.topDiv.style.height = '100%';
         }
 
         // Build the main container
         this.$mainContainer = $('<div/>', { class: 'JClicContainer', id: this.id })
           .css({ width: '100%', height: '100%' })
-          .appendTo(this.$topDiv)
+          .appendTo(this.topDiv)
 
         // Attach the localization
         i18n(this)
@@ -484,7 +482,7 @@ define([
         }
 
         // Step two: load the ActivitySequenceElement
-        
+
         // Check for null or undefined, but consider `0` a valid value
         if (sequence != null) {
           Utils.log('info', `Loading sequence: ${sequence}`)
@@ -1089,10 +1087,10 @@ define([
        * @type {external:jQuery} */
       $div: null,
       /**
-       * The JQuery top container where this player will deploy
-       * @name JClicPlayer#$topDiv
-       * @type {external:jQuery} */
-      $topDiv: null,
+       * The top container where this player will deploy
+       * @name JClicPlayer#topDiv
+       * @type {HTMLElement} */
+      topDiv: null,
       /**
        * The main container of all JClic components
        * @name JClicPlayer#$mainContainer

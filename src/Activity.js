@@ -194,7 +194,7 @@ define([
                           this.bScoreCounter = Utils.getBoolean($child.attr('score'), true)
                           break
                         case 'gradient':
-                          this.bgGradient = new AWT.Gradient().setProperties($child)
+                          this.bgGradient = new AWT.Gradient().setProperties(child)
                           break
                       }
                     })
@@ -210,14 +210,14 @@ define([
                       const $child = $(child)
                       switch (child.nodeName) {
                         case 'gradient':
-                          this.activityBgGradient = new AWT.Gradient().setProperties($child)
+                          this.activityBgGradient = new AWT.Gradient().setProperties(child)
                           break
                         case 'position':
-                          this.absolutePosition = new AWT.Point().setProperties($child)
+                          this.absolutePosition = new AWT.Point().setProperties(child)
                           this.absolutePositioned = true
                           break
                         case 'size':
-                          this.windowSize = new AWT.Dimension().setProperties($child)
+                          this.windowSize = new AWT.Dimension().setProperties(child)
                           break
                       }
                     })

@@ -90,12 +90,12 @@ define([
         const $node = $(child)
         switch (child.nodeName) {
           case 'font':
-            this.font = (new AWT.Font()).setProperties($node)
-            break
+            this.font = (new AWT.Font()).setProperties(child);
+            break;
 
           case 'gradient':
-            this.bgGradient = new AWT.Gradient().setProperties($node)
-            break
+            this.bgGradient = new AWT.Gradient().setProperties(child);
+            break;
 
           case 'color':
             this.textColor = Utils.checkColor($node.attr('foreground'), this.textColor)

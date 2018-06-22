@@ -206,7 +206,7 @@ define([
 
       // Find if there is another player already running on 'div'
       for (const pl of JClicObject.currentPlayers) {
-        if (pl && pl.$topDiv && pl.$topDiv.get(-1) === div) {
+        if (pl && pl.topDiv === div) {
           // Player found! Check if it has the same options
           Utils.log('debug', 'Existing JClicPlayer found in div. I will try to reuse it.')
           player = pl
@@ -225,7 +225,8 @@ define([
         player.reset()
       else {
         Utils.log('debug', 'Creating a new instance of JClicPlayer')
-        player = new JClicPlayer($(div).empty(), options)
+        div.innerHTML = '';
+        player = new JClicPlayer(div, options)
       }
 
       if (projectName)

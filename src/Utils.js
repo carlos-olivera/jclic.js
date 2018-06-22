@@ -566,7 +566,7 @@ define([
      * @returns {HTMLStyleElement} - The appended style element
      */
     appendStyleAtHead: (css, ps) => {
-      const root = Utils.getRootHead(ps && ps.$topDiv ? ps.$topDiv[0] : null)
+      const root = Utils.getRootHead(ps && ps.topDiv ? ps.topDiv : null)
       const style = document.createElement('style')
       style.type = 'text/css'
       style.appendChild(document.createTextNode(css))

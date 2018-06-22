@@ -309,7 +309,7 @@ define([
     setSkinSizes(full) {
       const
         css = {},
-        topHeight = this.player.$topDiv.height(),
+        topHeight = this.player.topDiv.clientHeight,
         nilValue = this.player.fullScreenChecked ? 'inherit' : null
 
       // When `full` no set, detect the current status with screenfull
