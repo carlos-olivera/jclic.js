@@ -46,10 +46,10 @@ define([
     BoxBase, AutoContentProvider, TextGridContent, Evaluator, TextActivityDocument) {
 
     // Direct access to global setings
-    const K = Utils.settings
+    const K = Utils.settings;
 
     // Event used for detecting touch devices
-    const TOUCH_TEST_EVENT = 'touchstart'
+    const TOUCH_TEST_EVENT = 'touchstart';
 
     /**
      * Activity is the abstract base class of JClic activities. It defines also the inner class
@@ -67,10 +67,10 @@ define([
        * @param {JClicProject} project - The {@link JClicProject} to which this activity belongs
        */
       constructor(project) {
-        this.project = project
-        this.eventSounds = new EventSounds(this.project.settings.eventSounds)
-        this.messages = {}
-        this.abc = {}
+        this.project = project;
+        this.eventSounds = new EventSounds(this.project.settings.eventSounds);
+        this.messages = {};
+        this.abc = {};
       }
 
       /**
@@ -81,18 +81,18 @@ define([
        * @returns {Activity}
        */
       static getActivity($xml, project) {
-        let act = null
+        let act = null;
         if ($xml && project) {
           const
             className = ($xml.attr('class') || '').replace(/^edu\.xtec\.jclic\.activities\./, '@'),
-            cl = Activity.CLASSES[className]
+            cl = Activity.CLASSES[className];
           if (cl) {
-            act = new cl(project)
-            act.setProperties($xml)
+            act = new cl(project);
+            act.setProperties($xml);
           } else
-            Utils.log('error', `Unknown activity class: ${className}`)
+            Utils.log('error', `Unknown activity class: ${className}`);
         }
-        return act
+        return act;
       }
 
       /**
@@ -106,33 +106,33 @@ define([
           switch (name) {
             // Generic attributes:
             case 'name':
-              val = Utils.nSlash(val)
+              val = Utils.nSlash(val);
             /* falls through */
             case 'code':
             case 'type':
             case 'description':
-              this[name] = val
-              break
+              this[name] = val;
+              break;
 
             case 'class':
-              this.className = val.replace(/^edu\.xtec\.jclic\.activities\./, '@')
-              break
+              this.className = val.replace(/^edu\.xtec\.jclic\.activities\./, '@');
+              break;
 
             case 'inverse':
-              this.invAss = Utils.getBoolean(val, false)
-              break
+              this.invAss = Utils.getBoolean(val, false);
+              break;
 
             case 'autoJump':
             case 'forceOkToAdvance':
             case 'amongParagraphs':
-              this[name] = Utils.getBoolean(val, false)
-              break
+              this[name] = Utils.getBoolean(val, false);
+              break;
           }
-        })
+        });
 
         // Read specific nodes
         $xml.children().each((_n, child) => {
-          const $node = $(child)
+          const $node = $(child);
           switch (child.nodeName) {
             case 'settings':
               // Read more attributes
@@ -140,141 +140,140 @@ define([
                 switch (name) {
                   case 'infoUrl':
                   case 'infoCmd':
-                    this[name] = val
-                    break
+                    this[name] = val;
+                    break;
 
                   case 'margin':
                   case 'maxTime':
                   case 'maxActions':
-                    this[name] = Number(val)
-                    break
+                    this[name] = Number(val);
+                    break;
 
                   case 'report':
-                    this.includeInReports = Utils.getBoolean(val, false)
-                    break
+                    this.includeInReports = Utils.getBoolean(val, false);
+                    break;
                   case 'countDownTime':
                   case 'countDownActions':
                   case 'reportActions':
                   case 'useOrder':
                   case 'dragCells':
-                    this[name] = Utils.getBoolean(val, false)
-                    break
+                    this[name] = Utils.getBoolean(val, false);
+                    break;
                 }
-              })
+              });
 
               // Read elements of _settings_
               $node.children().each((_n, child) => {
-                const $node = $(child)
+                const $node = $(child);
                 switch (child.nodeName) {
                   case 'skin':
-                    this.skinFileName = $node.attr('file')
-                    break
+                    this.skinFileName = $node.attr('file');
+                    break;
 
                   case 'helpWindow':
-                    this.helpMsg = Utils.getXmlText(child)
-                    this.showSolution = Utils.getBoolean($node.attr('showSolution'), false)
-                    this.helpWindow = this.helpMsg !== null || this.showSolution
-                    break
+                    this.helpMsg = Utils.getXmlText(child);
+                    this.showSolution = Utils.getBoolean($node.attr('showSolution'), false);
+                    this.helpWindow = this.helpMsg !== null || this.showSolution;
+                    break;
 
                   case 'container':
                     // Read settings related to the 'container'
                     // (the main panel containing the activity and other elements)
-                    this.bgColor = Utils.checkColor($node.attr('bgColor'), Utils.settings.BoxBase.BACK_COLOR)
+                    this.bgColor = Utils.checkColor($node.attr('bgColor'), Utils.settings.BoxBase.BACK_COLOR);
 
                     $node.children().each((_n, child) => {
-                      const $child = $(child)
+                      const $child = $(child);
                       switch (child.nodeName) {
                         case 'image':
-                          this.bgImageFile = $child.attr('name')
-                          this.tiledBgImg = Utils.getBoolean($child.attr('tiled'), false)
-                          break
+                          this.bgImageFile = $child.attr('name');
+                          this.tiledBgImg = Utils.getBoolean($child.attr('tiled'), false);
+                          break;
                         case 'counters':
-                          this.bTimeCounter = Utils.getBoolean($child.attr('time'), true)
-                          this.bActionsCounter = Utils.getBoolean($child.attr('actions'), true)
-                          this.bScoreCounter = Utils.getBoolean($child.attr('score'), true)
-                          break
+                          this.bTimeCounter = Utils.getBoolean($child.attr('time'), true);
+                          this.bActionsCounter = Utils.getBoolean($child.attr('actions'), true);
+                          this.bScoreCounter = Utils.getBoolean($child.attr('score'), true);
+                          break;
                         case 'gradient':
-                          this.bgGradient = new AWT.Gradient().setProperties(child)
-                          break
+                          this.bgGradient = new AWT.Gradient().setProperties(child);
+                          break;
                       }
-                    })
-                    break
+                    });
+                    break;
 
                   case 'window':
                     // Read settings related to the 'window'
                     // (the panel where the activity deploys its content)
-                    this.activityBgColor = Utils.checkColor($node.attr('bgColor'), K.DEFAULT_BG_COLOR)
-                    this.transparentBg = Utils.getBoolean($node.attr('transparent'), false)
-                    this.border = Utils.getBoolean($node.attr('border'), false)
+                    this.activityBgColor = Utils.checkColor($node.attr('bgColor'), K.DEFAULT_BG_COLOR);
+                    this.transparentBg = Utils.getBoolean($node.attr('transparent'), false);
+                    this.border = Utils.getBoolean($node.attr('border'), false);
                     $node.children().each((_n, child) => {
-                      const $child = $(child)
                       switch (child.nodeName) {
                         case 'gradient':
-                          this.activityBgGradient = new AWT.Gradient().setProperties(child)
-                          break
+                          this.activityBgGradient = new AWT.Gradient().setProperties(child);
+                          break;
                         case 'position':
-                          this.absolutePosition = new AWT.Point().setProperties(child)
-                          this.absolutePositioned = true
-                          break
+                          this.absolutePosition = new AWT.Point().setProperties(child);
+                          this.absolutePositioned = true;
+                          break;
                         case 'size':
-                          this.windowSize = new AWT.Dimension().setProperties(child)
-                          break
+                          this.windowSize = new AWT.Dimension().setProperties(child);
+                          break;
                       }
-                    })
-                    break
+                    });
+                    break;
 
                   case 'eventSounds':
                     // eventSounds is already created in constructor,
                     // just read properties
-                    this.eventSounds.setProperties($node)
-                    break
+                    this.eventSounds.setProperties($node);
+                    break;
                 }
-              })
-              break
+              });
+              break;
 
             case 'messages':
               $node.children('cell').each((_n, child) => {
-                const m = this.readMessage($(child))
+                const m = this.readMessage($(child));
                 // Possible message types are: `initial`, `final`, `previous`, `finalError`
-                this.messages[m.type] = m
-              })
-              break
+                this.messages[m.type] = m;
+              });
+              break;
 
             case 'automation':
               // Read the automation settings ('Arith' or other automation engines)
-              this.acp = AutoContentProvider.getProvider($node, this.project)
-              break
+              this.acp = AutoContentProvider.getProvider($node, this.project);
+              break;
 
             // Settings specific to panel-type activities (puzzles, associations...)
             case 'cells':
               // Read the [ActiveBagContent](ActiveBagContent.html) objects
-              const cellSet = new ActiveBagContent().setProperties($node, this.project.mediaBag)
+              const cellSet = new ActiveBagContent().setProperties($node, this.project.mediaBag);
               // Valid ids:
               // - Panel activities: 'primary', 'secondary', solvedPrimary'
               // - Textpanel activities: 'acrossClues', 'downClues', 'answers'
-              this.abc[cellSet.id] = cellSet
-              break
+              this.abc[cellSet.id] = cellSet;
+              break;
 
             case 'scramble':
               // Read the 'scramble' mode
-              this.shuffles = Number($node.attr('times'))
-              this.scramble.primary = Utils.getBoolean($node.attr('primary'))
-              this.scramble.secondary = Utils.getBoolean($node.attr('secondary'))
-              break
+              this.shuffles = Number($node.attr('times'));
+              this.scramble.primary = Utils.getBoolean($node.attr('primary'));
+              this.scramble.secondary = Utils.getBoolean($node.attr('secondary'));
+              break;
 
             case 'layout':
               Utils.attrForEach($node.get(0).attributes, (name, value) => {
                 switch (name) {
                   case 'position':
-                    this.boxGridPos = value
-                    break
+                    this.boxGridPos = value;
+                    break;
                   case 'wildTransparent':
                   case 'upperCase':
                   case 'checkCase':
-                    this[name] = Utils.getBoolean(value)
+                    this[name] = Utils.getBoolean(value);
                 }
-              })
-              break
+              });
+              break;
 
             // Element specific to {@link Menu} activities:
             case 'menuElement':
@@ -284,60 +283,60 @@ define([
                 projectPath: $node.attr('path') || null,
                 sequence: $node.attr('sequence') || null,
                 description: $node.attr('description') || ''
-              })
-              break
+              });
+              break;
 
             // Element specific to {@link CrossWord} and
             // {@link WordSearch} activities:
             case 'textGrid':
               // Read the 'textGrid' element into a {@link TextGridContent}
-              this.tgc = new TextGridContent().setProperties($node)
-              break
+              this.tgc = new TextGridContent().setProperties($node);
+              break;
 
             // Read the clues of {@link WordSearch} activities
             case 'clues':
               // Read the array of clues
-              this.clues = []
-              this.clueItems = []
+              this.clues = [];
+              this.clueItems = [];
               $node.children('clue').each((n, child) => {
-                this.clueItems[n] = Number($(child).attr('id'))
-                this.clues[n] = child.textContent
-              })
-              break
+                this.clueItems[n] = Number($(child).attr('id'));
+                this.clues[n] = child.textContent;
+              });
+              break;
 
             // Elements specific to text activities:
             case 'checkButton':
-              this.checkButtonText = child.textContent || 'check'
-              break
+              this.checkButtonText = child.textContent || 'check';
+              break;
 
             case 'prevScreen':
-              this.prevScreen = true
-              this.prevScreenMaxTime = $node.attr('maxTime') || -1
+              this.prevScreen = true;
+              this.prevScreenMaxTime = $node.attr('maxTime') || -1;
               $node.children().each((_n, child) => {
                 switch (child.nodeName) {
                   case 'style':
-                    this.prevScreenStyle = new BoxBase().setProperties($(child))
-                    break
+                    this.prevScreenStyle = new BoxBase().setProperties($(child));
+                    break;
                   case 'p':
                     if (this.prevScreenText === null)
-                      this.prevScreenText = ''
-                    this.prevScreenText += `<p>${child.textContent}</p>`
-                    break
+                      this.prevScreenText = '';
+                    this.prevScreenText += `<p>${child.textContent}</p>`;
+                    break;
                 }
-              })
-              break
+              });
+              break;
 
             case 'evaluator':
-              this.ev = Evaluator.getEvaluator($node)
-              break
+              this.ev = Evaluator.getEvaluator($node);
+              break;
 
             case 'document':
               // Read main document of text activities
-              this.document = new TextActivityDocument().setProperties($node, this.project.mediaBag)
-              break
+              this.document = new TextActivityDocument().setProperties($node, this.project.mediaBag);
+              break;
           }
-        })
-        return this
+        });
+        return this;
       }
 
       /**
@@ -346,14 +345,14 @@ define([
        * @returns {ActiveBoxContent}
        */
       readMessage($xml) {
-        const msg = new ActiveBoxContent().setProperties($xml, this.project.mediaBag)
+        const msg = new ActiveBoxContent().setProperties($xml, this.project.mediaBag);
         //
         // Allowed types are: `initial`, `final`, `previous`, `finalError`
-        msg.type = $xml.attr('type')
+        msg.type = $xml.attr('type');
         // Check for `null` or `undefined`
         if (msg.bb == null)
-          msg.bb = new BoxBase(null)
-        return msg
+          msg.bb = new BoxBase(null);
+        return msg;
       }
 
       /**
@@ -361,7 +360,7 @@ define([
        */
       initAutoContentProvider() {
         if (this.acp !== null)
-          this.acp.init()
+          this.acp.init();
       }
 
       /**
@@ -369,15 +368,15 @@ define([
        * @param {PlayStation} ps - The {@link PlayStation} used to realize the media objects.
        */
       prepareMedia(ps) {
-        this.eventSounds.realize(ps, this.project.mediaBag)
+        this.eventSounds.realize(ps, this.project.mediaBag);
         $.each(this.messages, (_key, msg) => {
-          if (msg !== null) msg.prepareMedia(ps)
-        })
+          if (msg !== null) msg.prepareMedia(ps);
+        });
         $.each(this.abc, (_key, abc) => {
           if (abc !== null)
-            abc.prepareMedia(ps)
-        })
-        return true
+            abc.prepareMedia(ps);
+        });
+        return true;
       }
 
       /**
@@ -385,7 +384,7 @@ define([
        * @returns {boolean}
        */
       helpSolutionAllowed() {
-        return false
+        return false;
       }
 
       /**
@@ -394,7 +393,7 @@ define([
        */
       helpWindowAllowed() {
         return this.helpWindow &&
-          (this.helpSolutionAllowed() && this.showSolution || this.helpMsg !== null)
+          (this.helpSolutionAllowed() && this.showSolution || this.helpMsg !== null);
       }
 
       /**
@@ -402,7 +401,7 @@ define([
        * @returns {number}
        */
       getMinNumActions() {
-        return 0
+        return 0;
       }
 
       /**
@@ -411,7 +410,7 @@ define([
        * @returns {boolean}
        */
       mustPauseSequence() {
-        return this.getMinNumActions() !== 0
+        return this.getMinNumActions() !== 0;
       }
 
       /**
@@ -419,7 +418,7 @@ define([
        * @returns {boolean}
        */
       canReinit() {
-        return true
+        return true;
       }
 
       /**
@@ -428,7 +427,7 @@ define([
        */
       hasInfo() {
         return this.infoUrl !== null && this.infoUrl.length > 0 ||
-          this.infoCmd !== null && this.infoCmd.length > 0
+          this.infoCmd !== null && this.infoCmd.length > 0;
       }
 
       /**
@@ -436,7 +435,7 @@ define([
        * @returns {boolean}
        */
       hasRandom() {
-        return false
+        return false;
       }
 
       /**
@@ -444,7 +443,7 @@ define([
        * @returns {boolean}
        */
       shuffleAlways() {
-        return false
+        return false;
       }
 
       /**
@@ -452,15 +451,15 @@ define([
        * @returns {boolean}
        */
       needsKeyboard() {
-        return false
+        return false;
       }
 
       /**
        * Called when the activity must be disposed
        */
       end() {
-        this.eventSounds.close()
-        this.clear()
+        this.eventSounds.close();
+        this.clear();
       }
 
       /**
@@ -475,7 +474,7 @@ define([
        * @returns {AWT.Dimension}
        */
       getWindowSize() {
-        return new AWT.Dimension(this.windowSize)
+        return new AWT.Dimension(this.windowSize);
       }
 
       /**
@@ -483,7 +482,7 @@ define([
        * @param {AWT.Dimension} windowSize
        */
       setWindowSize(windowSize) {
-        this.windowSize = new AWT.Dimension(windowSize)
+        this.windowSize = new AWT.Dimension(windowSize);
       }
 
       /**
@@ -493,7 +492,7 @@ define([
        * @returns {ActivityPanel}
        */
       getActivityPanel(ps) {
-        return new this.constructor.Panel(this, ps)
+        return new this.constructor.Panel(this, ps);
       }
     }
 
@@ -507,7 +506,7 @@ define([
      */
     Activity.CLASSES = {
       '@panels.Menu': Activity
-    }
+    };
 
     Object.assign(Activity.prototype, {
       /**
@@ -758,7 +757,7 @@ define([
        * @name Activity#menuElements
        * @type {array} */
       menuElements: null,
-    })
+    });
 
     /**
      * This object is responsible for rendering the contents of the activity on the screen and
@@ -781,17 +780,17 @@ define([
        */
       constructor(act, ps, $div) {
         // ActivityPanel extends AWT.Container
-        super()
-        this.act = act
-        this.ps = ps
-        this.minimumSize = new AWT.Dimension(100, 100)
-        this.preferredSize = new AWT.Dimension(500, 400)
+        super();
+        this.act = act;
+        this.ps = ps;
+        this.minimumSize = new AWT.Dimension(100, 100);
+        this.preferredSize = new AWT.Dimension(500, 400);
         if ($div)
-          this.$div = $div
+          this.$div = $div;
         else
-          this.$div = $('<div/>', { class: 'JClicActivity', 'aria-label': ps.getMsg('Activity panel') })
-        this.accessibleCanvas = Utils.settings.CANVAS_HITREGIONS
-        this.act.initAutoContentProvider()
+          this.$div = $('<div/>', { class: 'JClicActivity', 'aria-label': ps.getMsg('Activity panel') });
+        this.accessibleCanvas = Utils.settings.CANVAS_HITREGIONS;
+        this.act.initAutoContentProvider();
       }
 
       /**
@@ -799,62 +798,62 @@ define([
        * @param {AWT.Rectangle} rect
        */
       setBounds(rect) {
-        this.pos.x = rect.pos.x
-        this.pos.y = rect.pos.y
-        this.dim.width = rect.dim.width
-        this.dim.height = rect.dim.height
+        this.pos.x = rect.pos.x;
+        this.pos.y = rect.pos.y;
+        this.dim.width = rect.dim.width;
+        this.dim.height = rect.dim.height;
 
-        this.invalidate(rect)
+        this.invalidate(rect);
         this.$div.css({
           position: 'relative',
           left: rect.pos.x,
           top: rect.pos.y,
           width: rect.dim.width,
           height: rect.dim.height
-        })
+        });
       }
 
       /**
        * Prepares the visual components of the activity
        */
       buildVisualComponents() {
-        this.playing = false
-        this.skin = null
+        this.playing = false;
+        this.skin = null;
         if (this.act.skinFileName && this.act.skinFileName.length > 0 && this.act.skinFileName !== this.act.project.settings.skinFileName)
-          this.skin = this.act.project.mediaBag.getSkinElement(this.act.skinFileName, this.ps)
+          this.skin = this.act.project.mediaBag.getSkinElement(this.act.skinFileName, this.ps);
 
-        this.bgImage = null
+        this.bgImage = null;
         if (this.act.bgImageFile && this.act.bgImageFile.length > 0) {
-          const mbe = this.act.project.mediaBag.getElement(this.act.bgImageFile, true)
+          const mbe = this.act.project.mediaBag.getElement(this.act.bgImageFile, true);
           if (mbe)
-            this.bgImage = mbe.data
+            this.bgImage = mbe.data;
         }
 
-        this.backgroundColor = this.act.activityBgColor
+        this.backgroundColor = this.act.activityBgColor;
 
         if (this.act.transparentBg)
-          this.backgroundTransparent = true
+          this.backgroundTransparent = true;
 
         // TODO: fix bevel-border type
         if (this.act.border)
-          this.border = true
+          this.border = true;
 
         const cssAct = {
           display: 'block',
           'background-color': this.backgroundTransparent ? 'transparent' : this.backgroundColor
-        }
+        };
 
         // Border shadow style Material Design, inspired in [http://codepen.io/Stenvh/pen/EaeWqW]
         if (this.border) {
-          cssAct['box-shadow'] = '0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12)'
-          cssAct['border-radius'] = '2px'
-          cssAct['color'] = '#272727'
+          cssAct['box-shadow'] = '0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12)';
+          cssAct['border-radius'] = '2px';
+          cssAct['color'] = '#272727';
         }
 
         if (this.act.activityBgGradient)
-          cssAct['background-image'] = this.act.activityBgGradient.getCss()
+          cssAct['background-image'] = this.act.activityBgGradient.getCss();
 
-        this.$div.css(cssAct)
+        this.$div.css(cssAct);
       }
 
       /**
@@ -865,7 +864,7 @@ define([
        */
       updateContent(dirtyRegion) {
         // To be overridden by subclasses. Here does nothing.
-        return super.updateContent(dirtyRegion)
+        return super.updateContent(dirtyRegion);
       }
 
       /**
@@ -873,7 +872,7 @@ define([
        * @param {string} event - The type of event to be performed
        */
       playEvent(event) {
-        this.act.eventSounds.play(event)
+        this.act.eventSounds.play(event);
       }
 
       /**
@@ -881,20 +880,20 @@ define([
        */
       initActivity() {
         if (this.playing) {
-          this.playing = false
-          this.ps.reportEndActivity(this.act, this.solved)
+          this.playing = false;
+          this.ps.reportEndActivity(this.act, this.solved);
         }
-        this.solved = false
-        this.ps.reportNewActivity(this.act, 0)
-        this.attachEvents()
-        this.enableCounters()
+        this.solved = false;
+        this.ps.reportNewActivity(this.act, 0);
+        this.attachEvents();
+        this.enableCounters();
       }
 
       /**
        * Called when the activity starts playing
        */
       startActivity() {
-        this.playing = true
+        this.playing = true;
       }
 
       /**
@@ -920,17 +919,17 @@ define([
       setDimension(maxSize) {
         return new AWT.Dimension(
           Math.min(maxSize.width, this.act.windowSize.width),
-          Math.min(maxSize.height, this.act.windowSize.height))
+          Math.min(maxSize.height, this.act.windowSize.height));
       }
 
       /**
        * Attaches the events specified in the `events` member to the `$div` member
        */
       attachEvents() {
-        this.events.forEach(ev => this.attachEvent(this.$div, ev))
+        this.events.forEach(ev => this.attachEvent(this.$div, ev));
         // Prepare handler to check if we are in a touch device
         if (!K.TOUCH_DEVICE && $.inArray(TOUCH_TEST_EVENT, this.events) === -1)
-          this.attachEvent(this.$div, TOUCH_TEST_EVENT)
+          this.attachEvent(this.$div, TOUCH_TEST_EVENT);
       }
 
       /**
@@ -942,15 +941,15 @@ define([
         $obj.on(evt, this, event => {
           if (event.type === TOUCH_TEST_EVENT) {
             if (!K.TOUCH_DEVICE)
-              K.TOUCH_DEVICE = true
+              K.TOUCH_DEVICE = true;
             if ($.inArray(TOUCH_TEST_EVENT, this.events) === -1) {
               // Disconnect handler
-              $obj.off(TOUCH_TEST_EVENT)
-              return
+              $obj.off(TOUCH_TEST_EVENT);
+              return;
             }
           }
-          return event.data.processEvent.call(event.data, event)
-        })
+          return event.data.processEvent.call(event.data, event);
+        });
       }
 
       /**
@@ -960,7 +959,7 @@ define([
        * propagation through the DOM tree. See: {@link http://api.jquery.com/on}
        */
       processEvent(_event) {
-        return false
+        return false;
       }
 
       /**
@@ -970,29 +969,29 @@ define([
        * @param {AWT.Rectangle} bounds - The maximum allowed bounds
        */
       fitTo(proposed, bounds) {
-        const origin = new AWT.Point()
+        const origin = new AWT.Point();
         if (this.act.absolutePositioned && this.act.absolutePosition !== null) {
-          origin.x = Math.max(0, this.act.absolutePosition.x + proposed.pos.x)
-          origin.y = Math.max(0, this.act.absolutePosition.y + proposed.pos.y)
-          proposed.dim.width -= this.act.absolutePosition.x
-          proposed.dim.height -= this.act.absolutePosition.y
+          origin.x = Math.max(0, this.act.absolutePosition.x + proposed.pos.x);
+          origin.y = Math.max(0, this.act.absolutePosition.y + proposed.pos.y);
+          proposed.dim.width -= this.act.absolutePosition.x;
+          proposed.dim.height -= this.act.absolutePosition.y;
         }
         const d = this.setDimension(new AWT.Dimension(
           Math.max(2 * this.act.margin + Utils.settings.MINIMUM_WIDTH, proposed.dim.width),
-          Math.max(2 * this.act.margin + Utils.settings.MINIMUM_HEIGHT, proposed.dim.height)))
+          Math.max(2 * this.act.margin + Utils.settings.MINIMUM_HEIGHT, proposed.dim.height)));
         if (!this.act.absolutePositioned) {
           origin.moveTo(
             Math.max(0, proposed.pos.x + (proposed.dim.width - d.width) / 2),
-            Math.max(0, proposed.pos.y + (proposed.dim.height - d.height) / 2))
+            Math.max(0, proposed.pos.y + (proposed.dim.height - d.height) / 2));
         }
         if (origin.x + d.width > bounds.dim.width)
-          origin.x = Math.max(0, bounds.dim.width - d.width)
+          origin.x = Math.max(0, bounds.dim.width - d.width);
         if (origin.y + d.height > bounds.dim.height)
-          origin.y = Math.max(0, bounds.dim.height - d.height)
-        this.setBounds(new AWT.Rectangle(origin.x, origin.y, d.width, d.height))
+          origin.y = Math.max(0, bounds.dim.height - d.height);
+        this.setBounds(new AWT.Rectangle(origin.x, origin.y, d.width, d.height));
 
         // Build accessible components at the end of current tree
-        window.setTimeout(() => this.buildAccessibleComponents(), 0)
+        window.setTimeout(() => this.buildAccessibleComponents(), 0);
       }
 
       /**
@@ -1004,8 +1003,8 @@ define([
       buildAccessibleComponents() {
         // Clear existing elements
         if (this.accessibleCanvas && this.$canvas && this.$canvas.children().length > 0) {
-          this.$canvas.get(-1).getContext('2d').clearHitRegions()
-          this.$canvas.empty()
+          this.$canvas.get(-1).getContext('2d').clearHitRegions();
+          this.$canvas.empty();
         }
         // Create accessible elements in subclasses
       }
@@ -1022,19 +1021,19 @@ define([
        * @param {boolean} result - `true` if the activity was successfully completed, `false` otherwise
        */
       finishActivity(result) {
-        this.playing = false
-        this.solved = result
+        this.playing = false;
+        this.solved = result;
 
         if (this.bc !== null)
-          this.bc.end()
+          this.bc.end();
 
         if (result) {
-          this.setAndPlayMsg('final', 'finishedOk')
+          this.setAndPlayMsg('final', 'finishedOk');
         } else {
-          this.setAndPlayMsg('finalError', 'finishedError')
+          this.setAndPlayMsg('finalError', 'finishedError');
         }
-        this.ps.activityFinished(this.solved)
-        this.ps.reportEndActivity(this.act, this.solved)
+        this.ps.activityFinished(this.solved);
+        this.ps.reportEndActivity(this.act, this.solved);
       }
 
       /**
@@ -1043,25 +1042,25 @@ define([
        * @param {string=} eventSoundsCode - Optional name of the event sound to be played.
        */
       setAndPlayMsg(msgCode, eventSoundsCode) {
-        const msg = this.act.messages[msgCode] || null
-        this.ps.setMsg(msg)
+        const msg = this.act.messages[msgCode] || null;
+        this.ps.setMsg(msg);
         if (msg === null || msg.mediaContent === null)
-          this.playEvent(eventSoundsCode)
+          this.playEvent(eventSoundsCode);
       }
 
       /**
        * Ends the activity
        */
       end() {
-        this.forceFinishActivity()
+        this.forceFinishActivity();
         if (this.playing) {
           if (this.bc !== null)
-            this.bc.end()
-          this.ps.reportEndActivity(this.act, this.solved)
-          this.playing = false
-          this.solved = false
+            this.bc.end();
+          this.ps.reportEndActivity(this.act, this.solved);
+          this.playing = false;
+          this.solved = false;
         }
-        this.clear()
+        this.clear();
       }
 
       /**
@@ -1079,19 +1078,19 @@ define([
        */
       enableCounters(eTime, eScore, eActions) {
         if (typeof eTime === 'undefined')
-          eTime = this.act.bTimeCounter
+          eTime = this.act.bTimeCounter;
         if (typeof eScore === 'undefined')
-          eScore = this.act.bScoreCounter
+          eScore = this.act.bScoreCounter;
         if (typeof eActions === 'undefined')
-          eActions = this.act.bActionsCounter
+          eActions = this.act.bActionsCounter;
 
-        this.ps.setCounterEnabled('time', eTime)
+        this.ps.setCounterEnabled('time', eTime);
         if (this.act.countDownTime)
-          this.ps.setCountDown('time', this.act.maxTime)
-        this.ps.setCounterEnabled('score', eScore)
-        this.ps.setCounterEnabled('actions', eActions)
+          this.ps.setCountDown('time', this.act.maxTime);
+        this.ps.setCounterEnabled('score', eScore);
+        this.ps.setCounterEnabled('actions', eActions);
         if (this.act.countDownActions)
-          this.ps.setCountDown('actions', this.act.maxActions)
+          this.ps.setCountDown('actions', this.act.maxActions);
       }
 
       /**
@@ -1101,12 +1100,12 @@ define([
        * @param {boolean} fitInArea - Shuffled pieces cannot go out of the current area
        */
       shuffle(bg, visible, fitInArea) {
-        const steps = this.act.shuffles
-        let i = steps
+        const steps = this.act.shuffles;
+        let i = steps;
         while (i > 0) {
-          const k = i > steps ? steps : i
-          bg.forEach(abb => { if (abb) abb.scrambleCells(k, fitInArea) })
-          i -= steps
+          const k = i > steps ? steps : i;
+          bg.forEach(abb => { if (abb) abb.scrambleCells(k, fitInArea); });
+          i -= steps;
         }
       }
     }
@@ -1205,12 +1204,12 @@ define([
       backgroundColor: null,
       backgroundTransparent: false,
       border: null,
-    })
+    });
 
     /**
      * The panel class associated to each type of activity
      * @type {class} */
-    Activity.Panel = ActivityPanel
+    Activity.Panel = ActivityPanel;
 
-    return Activity
-  })
+    return Activity;
+  });

@@ -60,16 +60,16 @@ define([
      */
     constructor(family, size, bold, italic, variant) {
       if (family)
-        this.family = family
+        this.family = family;
       if (typeof size === 'number')
-        this.size = size
+        this.size = size;
       if (bold)
-        this.bold = bold
+        this.bold = bold;
       if (italic)
-        this.italic = italic
+        this.italic = italic;
       if (variant)
-        this.variant = variant
-      this._metrics = { ascent: -1, descent: -1, height: -1 }
+        this.variant = variant;
+      this._metrics = { ascent: -1, descent: -1, height: -1 };
     }
 
     /**
@@ -80,17 +80,17 @@ define([
      * a substition table to be added to {@link Font.SUBSTITUTIONS}
      */
     static checkTree(tree, options) {
-      let substitutions = Font.SUBSTITUTIONS
+      let substitutions = Font.SUBSTITUTIONS;
       // Load own fonts and remove it from the substitution table
       if (options && options.ownFonts) {
         options.ownFonts.forEach(name => {
           // Check WebFont as a workaround to avoid problems with a different version of `webfontloader` in agora.xtec.cat
           if (Font.ALREADY_LOADED_FONTS.indexOf(name) < 0 && WebFont && WebFont.load) {
-            WebFont.load({ custom: { families: [name] } })
-            Font.ALREADY_LOADED_FONTS.push(name)
-            delete substitutions[name.trim().toLowerCase()]
+            WebFont.load({ custom: { families: [name] } });
+            Font.ALREADY_LOADED_FONTS.push(name);
+            delete substitutions[name.trim().toLowerCase()];
           }
-        })
+        });
       }
 
       // Add custom font substitutions
@@ -107,7 +107,7 @@ define([
             style.setAttribute('family', newName);
           }
         }
-      })
+      });
 
       // Check also if default font must be replaced
       const name = Font.prototype.family.toLowerCase();
@@ -127,8 +127,8 @@ define([
     static loadGoogleFont(name) {
       // Check WebFont as a workaround to avoid problems with a different version of `webfontloader` in agora.xtec.cat
       if (name && !Font.ALREADY_LOADED_FONTS.includes(name) && WebFont && WebFont.load) {
-        WebFont.load({ google: { families: [name] } })
-        Font.ALREADY_LOADED_FONTS.push(name)
+        WebFont.load({ google: { families: [name] } });
+        Font.ALREADY_LOADED_FONTS.push(name);
       }
     }
 
@@ -138,7 +138,7 @@ define([
      */
     static loadGoogleFonts(fonts) {
       if (fonts && fonts.forEach)
-        fonts.forEach(name => Font.loadGoogleFont(name))
+        fonts.forEach(name => Font.loadGoogleFont(name));
     }
 
     /**
@@ -166,11 +166,11 @@ define([
      * @returns {Font}
      */
     setSize(size) {
-      const currentSize = this.size
-      this.size = size
+      const currentSize = this.size;
+      this.size = size;
       if (currentSize !== size)
-        this._metrics.height = -1
-      return this
+        this._metrics.height = -1;
+      return this;
     }
 
     /**
@@ -179,7 +179,7 @@ define([
      * @returns {Font}
      */
     zoom(amount) {
-      return this.setSize(this.size + amount)
+      return this.setSize(this.size + amount);
     }
 
     /**
@@ -189,17 +189,17 @@ define([
     getHeight() {
       if (this._metrics.height < 0) {
         // Look for an equivalent font already calculated
-        const font = Font.ALREADY_CALCULATED_FONTS.find(font => font.equals(this))
+        const font = Font.ALREADY_CALCULATED_FONTS.find(font => font.equals(this));
         if (font)
-          Object.assign(this._metrics, font._metrics)
+          Object.assign(this._metrics, font._metrics);
 
         if (this._metrics.height < 0) {
-          this._calcHeight()
+          this._calcHeight();
           if (this._metrics.height > 0)
-            Font.ALREADY_CALCULATED_FONTS.push(this)
+            Font.ALREADY_CALCULATED_FONTS.push(this);
         }
       }
-      return this._metrics.height
+      return this._metrics.height;
     }
 
     /**
@@ -210,16 +210,16 @@ define([
      */
     toCss(css) {
       if (!css)
-        css = {}
-      css['font-family'] = this.family
-      css['font-size'] = `${this.size}px`
+        css = {};
+      css['font-family'] = this.family;
+      css['font-size'] = `${this.size}px`;
       if (this.hasOwnProperty('bold'))
-        css['font-weight'] = this.bold ? 'bold' : 'normal'
+        css['font-weight'] = this.bold ? 'bold' : 'normal';
       if (this.hasOwnProperty('italic'))
-        css['font-style'] = this.italic ? 'italic' : 'normal'
+        css['font-style'] = this.italic ? 'italic' : 'normal';
       if (this.hasOwnProperty('variant'))
-        css['font-variant'] = this.variant
-      return css
+        css['font-variant'] = this.variant;
+      return css;
     }
 
     /**
@@ -228,7 +228,7 @@ define([
      * @returns {String} - A string with all the CSS font properties concatenated
      */
     cssFont() {
-      return `${this.italic ? 'italic ' : 'normal'} ${this.variant === '' ? 'normal' : this.variant} ${this.bold ? 'bold ' : 'normal'} ${this.size}pt ${this.family}`
+      return `${this.italic ? 'italic ' : 'normal'} ${this.variant === '' ? 'normal' : this.variant} ${this.bold ? 'bold ' : 'normal'} ${this.size}pt ${this.family}`;
     }
 
     /**
@@ -248,13 +248,12 @@ define([
       // Build a sample text span with a tall letter (H) and a letter that extends below the baseline (g)
       const text = Utils.HTML.element('span', 'Hg', null, this.toCss());
       // Build an inline block with just one pixel, used as a reference to the baseline
-      const block = Utils.HTML.element('div', null, null, { display: 'inline-block', width: '1px', height: '0px' });
+      const block = Utils.HTML.div(null, null, { display: 'inline-block', width: '1px', height: '0px' });
       // Fake div containing both elements
-      const div = Utils.HTML.element('div');
-      div.append(text, block);
+      const div = Utils.HTML.append(Utils.HTML.div(), text, block);
 
       // Place the div on the document and measure relative offsets
-      document.body.append(div);
+      document.body.appendChild(div);
       try {
         Utils.HTML.css(block, { verticalAlign: 'baseline' });
         this._metrics.ascent = block.offsetTop - text.offsetTop;
@@ -278,7 +277,7 @@ define([
         this.size === font.size &&
         this.bold === font.bold &&
         this.italic === font.italic &&
-        this.variant === font.variant
+        this.variant === font.variant;
     }
 
     /**
@@ -294,11 +293,11 @@ define([
 
   /**
    * Array of font objects with already calculated heights */
-  Font.ALREADY_CALCULATED_FONTS = []
+  Font.ALREADY_CALCULATED_FONTS = [];
 
   /**
    * Array of font names already loaded from Google Fonts */
-  Font.ALREADY_LOADED_FONTS = []
+  Font.ALREADY_LOADED_FONTS = [];
 
   /**
    * Google Fonts equivalent for special fonts used in some JClic projects.
@@ -320,7 +319,7 @@ define([
     'memimas-regularalternate': 'Vibur',
     'palmemim': 'Vibur',
     'zurichcalligraphic': 'Felipa'
-  }
+  };
 
   Object.assign(Font.prototype, {
     /**
@@ -358,7 +357,7 @@ define([
      * @private
      * @type {{ascent: number, descent: number, height: number}} */
     _metrics: { ascent: -1, descent: -1, height: -1 },
-  })
+  });
 
   /**
    * Contains parameters and methods to draw complex color gradients
@@ -367,20 +366,20 @@ define([
   class Gradient {
     /**
      * Gradient constructor
-     * @param {string} c1 - The initial color, in any CSS-valid form.
-     * @param {string} c2 - The final color, in any CSS-valid form.
+     * @param {string} [c1='white'] - The initial color, in any CSS-valid form.
+     * @param {string} [c2='black'] - The final color, in any CSS-valid form.
      * @param {number=} [angle=0] - The inclination of the gradient relative to the horizontal line.
      * @param {number=} [cycles=1] - The number of times the gradient will be repeated.
      */
     constructor(c1, c2, angle, cycles) {
       if (c1)
-        this.c1 = c1
+        this.c1 = c1;
       if (c2)
-        this.c2 = c2
+        this.c2 = c2;
       if (typeof angle === 'number')
-        this.angle = angle % 360
+        this.angle = angle % 360;
       if (typeof cycles === 'number')
-        this.cycles = cycles
+        this.cycles = cycles;
     }
 
     /**
@@ -404,13 +403,12 @@ define([
      * @returns {Gradient}
      */
     getGradient(ctx, rect) {
-      const
-        p2 = rect.getOppositeVertex(),
-        gradient = ctx.createLinearGradient(rect.pos.x, rect.pos.y, p2.x, p2.y),
-        step = 1 / Math.max(this.cycles, 1)
+      const p2 = rect.getOppositeVertex();
+      const gradient = ctx.createLinearGradient(rect.pos.x, rect.pos.y, p2.x, p2.y);
+      const step = 1 / Math.max(this.cycles, 1);
       for (let i = 0; i <= this.cycles; i++)
-        gradient.addColorStop(i * step, i % 2 ? this.c1 : this.c2)
-      return gradient
+        gradient.addColorStop(i * step, i % 2 ? this.c1 : this.c2);
+      return gradient;
     }
 
     /**
@@ -418,10 +416,10 @@ define([
      * @returns {string} - A string ready to be used as a value for the `linear-gradient` CSS attribute
      */
     getCss() {
-      let result = `linear-gradient(${(this.angle + 90)}deg, ${this.c1}, ${this.c2}`
+      let result = `linear-gradient(${(this.angle + 90)}deg, ${this.c1}, ${this.c2}`;
       for (let i = 1; i < this.cycles; i++)
-        result = `${result}, ${i % 2 > 0 ? this.c1 : this.c2}`
-      return `${result})`
+        result = `${result}, ${i % 2 > 0 ? this.c1 : this.c2}`;
+      return `${result})`;
     }
 
     /**
@@ -429,7 +427,7 @@ define([
      * @returns {boolean} - `true` if this gradient uses colors with transparency, `false` otherwise.
      */
     hasTransparency() {
-      return Utils.colorHasTransparency(this.c1) || Utils.colorHasTransparency(this.c2)
+      return Utils.colorHasTransparency(this.c1) || Utils.colorHasTransparency(this.c2);
     }
   }
 
@@ -454,7 +452,7 @@ define([
      * @name Gradient#cycles
      * @type {number} */
     cycles: 1,
-  })
+  });
 
   /**
    * Contains properties used to draw lines in HTML `canvas` elements.
@@ -473,13 +471,13 @@ define([
      */
     constructor(lineWidth, lineCap, lineJoin, miterLimit) {
       if (typeof lineWidth === 'number')
-        this.lineWidth = lineWidth
+        this.lineWidth = lineWidth;
       if (lineCap)
-        this.lineCap = lineCap
+        this.lineCap = lineCap;
       if (lineJoin)
-        this.lineJoin = lineJoin
+        this.lineJoin = lineJoin;
       if (typeof miterLimit === 'number')
-        this.miterLimit = miterLimit
+        this.miterLimit = miterLimit;
     }
 
     /**
@@ -488,11 +486,11 @@ define([
      * @returns {external:CanvasRenderingContext2D}
      */
     setStroke(ctx) {
-      ctx.lineWidth = this.lineWidth
-      ctx.lineCap = this.lineCap
-      ctx.lineJoin = this.lineJoin
-      ctx.miterLimit = this.miterLimit
-      return ctx
+      ctx.lineWidth = this.lineWidth;
+      ctx.lineCap = this.lineCap;
+      ctx.lineJoin = this.lineJoin;
+      ctx.miterLimit = this.miterLimit;
+      return ctx;
     }
   }
 
@@ -517,7 +515,7 @@ define([
      * @name Stroke#miterLimit
      * @type {number} */
     miterLimit: 10.0,
-  })
+  });
 
   /**
    * Contains the `x` andy `y` coordinates of a point, and provides some useful methods.
@@ -526,17 +524,17 @@ define([
   class Point {
     /**
      * Point constructor
-     * @param {number|Point} x - When `x` is an `Point` object, a clone of it will be created.
-     * @param {number=} y - Not used when `x` is an `Point`
+     * @param {number|Point} [x=0] - When `x` is an `Point` object, a clone of it will be created.
+     * @param {number=} [y=0] - Not used when `x` is an `Point`
      */
-    constructor(x, y) {
+    constructor(x = 0, y = 0) {
       if (x instanceof Point) {
         // Special case: constructor passing another point as unique parameter
-        this.x = x.x
-        this.y = x.y
+        this.x = x.x;
+        this.y = x.y;
       } else {
-        this.x = x || 0
-        this.y = y || 0
+        this.x = x;
+        this.y = y;
       }
     }
 
@@ -557,9 +555,9 @@ define([
      * @returns {Point}
      */
     moveBy(delta) {
-      this.x += delta.x || delta.width || 0
-      this.y += delta.y || delta.height || 0
-      return this
+      this.x += delta.x || delta.width || 0;
+      this.y += delta.y || delta.height || 0;
+      return this;
     }
 
     /**
@@ -570,13 +568,13 @@ define([
      */
     moveTo(newPos, y) {
       if (typeof newPos === 'number') {
-        this.x = newPos
-        this.y = y
+        this.x = newPos;
+        this.y = y;
       } else {
-        this.x = newPos.x
-        this.y = newPos.y
+        this.x = newPos.x;
+        this.y = newPos.y;
       }
-      return this
+      return this;
     }
 
     /**
@@ -585,9 +583,9 @@ define([
      * @returns {Point}
      */
     multBy(delta) {
-      this.x *= delta.x || delta.width || 0
-      this.y *= delta.y || delta.height || 0
-      return this
+      this.x *= delta.x || delta.width || 0;
+      this.y *= delta.y || delta.height || 0;
+      return this;
     }
 
     /**
@@ -596,7 +594,7 @@ define([
      * @returns {boolean}
      */
     equals(p) {
-      return this.x === p.x && this.y === p.y
+      return this.x === p.x && this.y === p.y;
     }
 
     /**
@@ -605,7 +603,7 @@ define([
      * @returns {number} - The distance between the two points.
      */
     distanceTo(point) {
-      return Math.sqrt(Math.pow(this.x - point.x, 2), Math.pow(this.y - point.y, 2))
+      return Math.sqrt(Math.pow(this.x - point.x, 2), Math.pow(this.y - point.y, 2));
     }
 
     /**
@@ -613,7 +611,7 @@ define([
      * @returns {Point}
      */
     clone() {
-      return new Point(this)
+      return new Point(this);
     }
   }
 
@@ -626,7 +624,7 @@ define([
      * @name Point#y
      * @type {number} */
     y: 0,
-  })
+  });
 
   /**
    * This class encapsulates `width` and `height` properties.
@@ -635,18 +633,18 @@ define([
   class Dimension {
     /**
      * Dimension constructor
-     * @param {number|Point} w - The width of this Dimension, or the upper-left vertex of a
+     * @param {number|Point} [w=0] - The width of this Dimension, or the upper-left vertex of a
      * virtual Rectangle
-     * @param {number|Point} h - The height of this Dimension, or the bottom-right vertex of a
+     * @param {number|Point} [h=0] - The height of this Dimension, or the bottom-right vertex of a
      * virtual Rectangle
      */
-    constructor(w, h) {
+    constructor(w = 0, h = 0) {
       if (w instanceof Point && h instanceof Point) {
-        this.width = h.x - w.x
-        this.height = h.y - w.y
+        this.width = h.x - w.x;
+        this.height = h.y - w.y;
       } else {
-        this.width = w || 0
-        this.height = h || 0
+        this.width = w;
+        this.height = h;
       }
     }
 
@@ -667,7 +665,7 @@ define([
      * @returns {Boolean}
      */
     equals(d) {
-      return this.width === d.width && this.height === d.height
+      return this.width === d.width && this.height === d.height;
     }
 
     /**
@@ -676,9 +674,9 @@ define([
      * @returns {Dimension}
      */
     multBy(delta) {
-      this.width *= delta.x || delta.width || 0
-      this.height *= delta.y || delta.height || 0
-      return this
+      this.width *= delta.x || delta.width || 0;
+      this.height *= delta.y || delta.height || 0;
+      return this;
     }
 
     /**
@@ -690,12 +688,12 @@ define([
      */
     setDimension(width, height) {
       if (width instanceof Dimension) {
-        height = width.height
-        width = width.width
+        height = width.height;
+        width = width.width;
       }
-      this.width = width
-      this.height = height
-      return this
+      this.width = width;
+      this.height = height;
+      return this;
     }
 
     /**
@@ -703,7 +701,7 @@ define([
      * @return {number} The resulting area
      */
     getSurface() {
-      return this.width * this.height
+      return this.width * this.height;
     }
   }
 
@@ -716,7 +714,7 @@ define([
      * @name Dimension#height
      * @type {number} */
     height: 0,
-  })
+  });
 
   /**
    * Shape is a generic abstract class for rectangles, ellipses and stroke-free shapes.
@@ -729,7 +727,7 @@ define([
      * @param {Point} pos - The top-left coordinates of this Shape
      */
     constructor(pos) {
-      this.pos = pos || new Point()
+      this.pos = pos || new Point();
     }
 
     /**
@@ -738,8 +736,8 @@ define([
      * @returns {Shape}
      */
     moveBy(delta) {
-      this.pos.moveBy(delta)
-      return this
+      this.pos.moveBy(delta);
+      return this;
     }
 
     /**
@@ -748,8 +746,8 @@ define([
      * @returns {Shape}
      */
     moveTo(newPos) {
-      this.pos.moveTo(newPos)
-      return this
+      this.pos.moveTo(newPos);
+      return this;
     }
 
     /**
@@ -757,7 +755,7 @@ define([
      * @returns {Rectangle}
      */
     getBounds() {
-      return new Rectangle(this.pos)
+      return new Rectangle(this.pos);
     }
 
     /**
@@ -766,7 +764,7 @@ define([
      * @returns {boolean}
      */
     equals(p) {
-      return this.pos.equals(p.pos)
+      return this.pos.equals(p.pos);
     }
 
     /**
@@ -776,7 +774,7 @@ define([
      */
     scaleBy(_delta) {
       // Nothing to scale in abstract shapes
-      return this
+      return this;
     }
 
     /**
@@ -787,7 +785,7 @@ define([
      * @returns {Shape}
      */
     getShape(rect) {
-      return this.clone().scaleBy(rect.dim).moveBy(rect.pos)
+      return this.clone().scaleBy(rect.dim).moveBy(rect.pos);
     }
 
     /**
@@ -797,7 +795,7 @@ define([
      */
     contains(_p) {
       // Nothing to check in abstract shapes
-      return false
+      return false;
     }
 
     /**
@@ -807,7 +805,7 @@ define([
      */
     intersects(_r) {
       // Nothing to check in abstract shapes
-      return false
+      return false;
     }
 
     /**
@@ -818,18 +816,18 @@ define([
      * @returns {external:CanvasRenderingContext2D} - The provided rendering context
      */
     fill(ctx, dirtyRegion) {
-      ctx.save()
+      ctx.save();
       if (dirtyRegion && dirtyRegion.getSurface() > 0) {
         // Clip the dirty region
-        ctx.beginPath()
-        ctx.rect(dirtyRegion.pos.x, dirtyRegion.pos.y, dirtyRegion.dim.width, dirtyRegion.dim.height)
-        ctx.clip()
+        ctx.beginPath();
+        ctx.rect(dirtyRegion.pos.x, dirtyRegion.pos.y, dirtyRegion.dim.width, dirtyRegion.dim.height);
+        ctx.clip();
       }
       // Prepare shape path and fill
-      this.preparePath(ctx)
-      ctx.fill()
-      ctx.restore()
-      return ctx
+      this.preparePath(ctx);
+      ctx.fill();
+      ctx.restore();
+      return ctx;
     }
 
     /**
@@ -838,9 +836,9 @@ define([
      * @returns {external:CanvasRenderingContext2D} - The provided rendering context
      */
     stroke(ctx) {
-      this.preparePath(ctx)
-      ctx.stroke()
-      return ctx
+      this.preparePath(ctx);
+      ctx.stroke();
+      return ctx;
     }
 
     /**
@@ -851,7 +849,7 @@ define([
      */
     preparePath(ctx) {
       // Nothing to do in abstract shapes
-      return ctx
+      return ctx;
     }
 
     /**
@@ -861,9 +859,9 @@ define([
      * @returns {external:CanvasRenderingContext2D} - The provided rendering context
      */
     clip(ctx, fillRule) {
-      this.preparePath(ctx)
-      ctx.clip(fillRule || 'nonzero')
-      return ctx
+      this.preparePath(ctx);
+      ctx.clip(fillRule || 'nonzero');
+      return ctx;
     }
 
     /**
@@ -871,7 +869,7 @@ define([
      * @returns {Boolean}
      */
     isRect() {
-      return false
+      return false;
     }
 
     /**
@@ -879,7 +877,7 @@ define([
      * @returns {String}
      */
     toString() {
-      return `Shape enclosed in ${this.getBounds().getCoords()}`
+      return `Shape enclosed in ${this.getBounds().getCoords()}`;
     }
   }
 
@@ -889,7 +887,7 @@ define([
      * @name Shape#pos
      * @type {Point} */
     pos: new Point(),
-  })
+  });
 
   /**
    * The rectangular {@link Shape} accepts five different sets of parameters:
@@ -917,32 +915,32 @@ define([
      * @param {number=} h
      */
     constructor(pos, dim, w, h) {
-      let p = pos, d = dim
+      let p = pos, d = dim;
       // Special case: constructor with a Rectangle as a unique parameter
       if (pos instanceof Rectangle) {
-        d = new Dimension(pos.dim.width, pos.dim.height)
-        p = new Point(pos.pos.x, pos.pos.y)
+        d = new Dimension(pos.dim.width, pos.dim.height);
+        p = new Point(pos.pos.x, pos.pos.y);
       } else if (pos instanceof Point) {
-        p = new Point(pos.x, pos.y)
+        p = new Point(pos.x, pos.y);
         if (dim instanceof Dimension)
-          d = new Dimension(dim.width, dim.height)
+          d = new Dimension(dim.width, dim.height);
       } else if (pos instanceof Array) {
         // Assume `pos` is an array of numbers indicating: x0, y0, x1, y1
-        p = new Point(pos[0], pos[1])
-        d = new Dimension(pos[2] - pos[0], pos[3] - pos[1])
+        p = new Point(pos[0], pos[1]);
+        d = new Dimension(pos[2] - pos[0], pos[3] - pos[1]);
       } else if (typeof w === 'number' && typeof h === 'number') {
         // width and height passed. Treat all parameters as co-ordinates:
-        p = new Point(pos, dim)
-        d = new Dimension(w, h)
+        p = new Point(pos, dim);
+        d = new Dimension(w, h);
       }
-      super(p)
+      super(p);
 
       if (d instanceof Dimension)
-        this.dim = d
+        this.dim = d;
       else if (d instanceof Point)
-        this.dim = new Dimension(d.x - this.pos.x, d.y - this.pos.y)
+        this.dim = new Dimension(d.x - this.pos.x, d.y - this.pos.y);
       else
-        this.dim = new Dimension()
+        this.dim = new Dimension();
     }
 
     /**
@@ -950,7 +948,7 @@ define([
      * @returns {Rectangle}
      */
     getBounds() {
-      return this
+      return this;
     }
 
     /**
@@ -960,12 +958,12 @@ define([
      */
     setBounds(rect) {
       if (!rect)
-        rect = new Rectangle()
-      this.pos.x = rect.pos.x
-      this.pos.y = rect.pos.y
-      this.dim.width = rect.dim.width
-      this.dim.height = rect.dim.height
-      return this
+        rect = new Rectangle();
+      this.pos.x = rect.pos.x;
+      this.pos.y = rect.pos.y;
+      this.dim.width = rect.dim.width;
+      this.dim.height = rect.dim.height;
+      return this;
     }
 
     /**
@@ -974,7 +972,7 @@ define([
      * @returns {boolean}
      */
     equals(r) {
-      return r instanceof Rectangle && this.pos.equals(r.pos) && this.dim.equals(r.dim)
+      return r instanceof Rectangle && this.pos.equals(r.pos) && this.dim.equals(r.dim);
     }
 
     /**
@@ -982,7 +980,7 @@ define([
      * @returns {Rectangle}
      */
     clone() {
-      return new Rectangle(this)
+      return new Rectangle(this);
     }
 
     /**
@@ -991,9 +989,9 @@ define([
      * @returns {Rectangle}
      */
     scaleBy(delta) {
-      this.pos.multBy(delta)
-      this.dim.multBy(delta)
-      return this
+      this.pos.multBy(delta);
+      this.dim.multBy(delta);
+      return this;
     }
 
     /**
@@ -1003,11 +1001,11 @@ define([
      * @returns {Rectangle}
      */
     grow(dx, dy) {
-      this.pos.x -= dx
-      this.pos.y -= dy
-      this.dim.width += 2 * dx
-      this.dim.height += 2 * dy
-      return this
+      this.pos.x -= dx;
+      this.pos.y -= dy;
+      this.dim.width += 2 * dx;
+      this.dim.height += 2 * dy;
+      return this;
     }
 
     /**
@@ -1015,7 +1013,7 @@ define([
      * @returns {Point}
      */
     getOppositeVertex() {
-      return new Point(this.pos.x + this.dim.width, this.pos.y + this.dim.height)
+      return new Point(this.pos.x + this.dim.width, this.pos.y + this.dim.height);
     }
 
     /**
@@ -1026,22 +1024,22 @@ define([
     add(shape) {
       const
         myP2 = this.getOppositeVertex(),
-        rectP2 = shape.getBounds().getOppositeVertex()
+        rectP2 = shape.getBounds().getOppositeVertex();
 
       this.pos.moveTo(
         Math.min(this.pos.x, shape.getBounds().pos.x),
-        Math.min(this.pos.y, shape.getBounds().pos.y))
+        Math.min(this.pos.y, shape.getBounds().pos.y));
       this.dim.setDimension(
         Math.max(myP2.x, rectP2.x) - this.pos.x,
-        Math.max(myP2.y, rectP2.y) - this.pos.y)
-      return this
+        Math.max(myP2.y, rectP2.y) - this.pos.y);
+      return this;
     }
 
     //
     // Inherits the documentation of `contains` in Shape
     contains(p) {
-      const p2 = this.getOppositeVertex()
-      return p.x >= this.pos.x && p.x <= p2.x && p.y >= this.pos.y && p.y <= p2.y
+      const p2 = this.getOppositeVertex();
+      return p.x >= this.pos.x && p.x <= p2.x && p.y >= this.pos.y && p.y <= p2.y;
     }
 
     //
@@ -1049,40 +1047,40 @@ define([
     intersects(r) {
       const
         p1 = this.pos, p2 = this.getOppositeVertex(),
-        r1 = r.pos, r2 = r.getOppositeVertex()
-      return r2.x >= p1.x && r1.x <= p2.x && r2.y >= p1.y && r1.y <= p2.y
+        r1 = r.pos, r2 = r.getOppositeVertex();
+      return r2.x >= p1.x && r1.x <= p2.x && r2.y >= p1.y && r1.y <= p2.y;
     }
 
     //
     // Inherits the documentation of `preparePath` in Shape
     preparePath(ctx) {
-      ctx.beginPath()
-      ctx.rect(this.pos.x, this.pos.y, this.dim.width, this.dim.height)
-      return ctx
+      ctx.beginPath();
+      ctx.rect(this.pos.x, this.pos.y, this.dim.width, this.dim.height);
+      return ctx;
     }
 
     //
     // Inherits the documentation of `getSurface` in Shape
     getSurface() {
-      return this.dim.getSurface()
+      return this.dim.getSurface();
     }
 
     //
     // Inherits the documentation of `isEmpty` in Shape
     isEmpty() {
-      return this.getSurface() === 0
+      return this.getSurface() === 0;
     }
 
     //
     // Inherits the documentation of `isRect` in Shape
     isRect() {
-      return true
+      return true;
     }
 
     //
     // Inherits the documentation of `toString` in Shape
     toString() {
-      return `Rectangle ${this.getCoords()}`
+      return `Rectangle ${this.getCoords()}`;
     }
 
     /**
@@ -1091,7 +1089,7 @@ define([
      * @returns {String}
      */
     getCoords() {
-      return `[${Math.round(this.pos.x)},${Math.round(this.pos.y)},${Math.round(this.pos.x + this.dim.width)},${Math.round(this.pos.y + this.dim.height)}]`
+      return `[${Math.round(this.pos.x)},${Math.round(this.pos.y)},${Math.round(this.pos.x + this.dim.width)},${Math.round(this.pos.y + this.dim.height)}]`;
     }
   }
 
@@ -1101,7 +1099,7 @@ define([
      * @name Rectangle#dim
      * @type {Dimension} */
     dim: new Dimension(),
-  })
+  });
 
   /**
    * The Ellipse shape has the same constructor options as {@link Rectangle}
@@ -1117,7 +1115,7 @@ define([
      * @param {number=} h
      */
     constructor(pos, dim, w, h) {
-      super(pos, dim, w, h)
+      super(pos, dim, w, h);
     }
 
     //
@@ -1135,66 +1133,66 @@ define([
         xe = this.pos.x + this.dim.width, // x-end
         ye = this.pos.y + this.dim.height, // y-end
         xm = this.pos.x + this.dim.width / 2, // x-middle
-        ym = this.pos.y + this.dim.height / 2 // y-middle
+        ym = this.pos.y + this.dim.height / 2; // y-middle
 
-      ctx.beginPath()
-      ctx.moveTo(this.pos.x, ym)
-      ctx.bezierCurveTo(this.pos.x, ym - oy, xm - ox, this.pos.y, xm, this.pos.y)
-      ctx.bezierCurveTo(xm + ox, this.pos.y, xe, ym - oy, xe, ym)
-      ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye)
-      ctx.bezierCurveTo(xm - ox, ye, this.pos.x, ym + oy, this.pos.x, ym)
-      ctx.closePath()
-      return ctx
+      ctx.beginPath();
+      ctx.moveTo(this.pos.x, ym);
+      ctx.bezierCurveTo(this.pos.x, ym - oy, xm - ox, this.pos.y, xm, this.pos.y);
+      ctx.bezierCurveTo(xm + ox, this.pos.y, xe, ym - oy, xe, ym);
+      ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
+      ctx.bezierCurveTo(xm - ox, ye, this.pos.x, ym + oy, this.pos.x, ym);
+      ctx.closePath();
+      return ctx;
     }
 
     //
     // Inherits the documentation of `contains` in Shape
     contains(p) {
       // First check if the point is inside the enclosing rectangle
-      let result = super.contains(p)
+      let result = super.contains(p);
       if (result) {
         const
           rx = this.dim.width / 2,
           ry = this.dim.height / 2,
           cx = this.pos.x + rx,
-          cy = this.pos.y + ry
+          cy = this.pos.y + ry;
         // Apply the general equation of an ellipse
         // See: [http://math.stackexchange.com/questions/76457/check-if-a-point-is-within-an-ellipse]
         // rx and ry are > 0 because we are inside the enclosing rect,
         // so don't care about division by zero
-        result = Math.pow(p.x - cx, 2) / Math.pow(rx, 2) + Math.pow(p.y - cy, 2) / Math.pow(ry, 2) <= 1
+        result = Math.pow(p.x - cx, 2) / Math.pow(rx, 2) + Math.pow(p.y - cy, 2) / Math.pow(ry, 2) <= 1;
       }
-      return result
+      return result;
     }
 
     //
     // Inherits the documentation of `getSurface` in Rectangle
     getSurface() {
-      return Math.PI * this.dim.width / 2 * this.dim.height / 2
+      return Math.PI * this.dim.width / 2 * this.dim.height / 2;
     }
 
     //
     // Inherits the documentation of `equals` in Rectangle
     equals(e) {
-      return e instanceof Ellipse && super.equals(e)
+      return e instanceof Ellipse && super.equals(e);
     }
 
     //
     // Inherits the documentation of `clone` in Rectangle
     clone() {
-      return new Ellipse(this.pos, this.dim)
+      return new Ellipse(this.pos, this.dim);
     }
 
     //
     // Inherits the documentation of `isRect` in Rectangle
     isRect() {
-      return false
+      return false;
     }
 
     //
     // Inherits the documentation of `toString` in Shape
     toString() {
-      return `Ellipse enclosed in ${this.getCoords()}`
+      return `Ellipse enclosed in ${this.getCoords()}`;
     }
   }
 
@@ -1210,24 +1208,24 @@ define([
      * @param {PathStroke[]} strokes - The array of {@link PathStroke} objects defining this Path.
      */
     constructor(strokes) {
-      super()
+      super();
       // Deep copy of the array of strokes
       if (strokes) {
-        this.strokes = []
+        this.strokes = [];
         // In [Shaper](Shaper.html) objects, strokes have `action` instead of `type` and `data` instead of `points`
-        strokes.forEach(str => this.strokes.push(new PathStroke(str.type || str.action, str.points || str.data)))
+        strokes.forEach(str => this.strokes.push(new PathStroke(str.type || str.action, str.points || str.data)));
       }
       // Calculate the enclosing rectangle
-      this.enclosing = new Rectangle()
-      this.enclosingPoints = []
-      this.calcEnclosingRect()
-      this.pos = this.enclosing.pos
+      this.enclosing = new Rectangle();
+      this.enclosingPoints = [];
+      this.calcEnclosingRect();
+      this.pos = this.enclosing.pos;
     }
 
     //
     // Inherits the documentation of `clone` in Shape
     clone() {
-      return new Path(this.strokes.map(str => str.clone()))
+      return new Path(this.strokes.map(str => str.clone()));
     }
 
     /**
@@ -1235,8 +1233,8 @@ define([
      * @param {PathStroke} stroke
      */
     addStroke(stroke) {
-      this.strokes.push(stroke)
-      return this
+      this.strokes.push(stroke);
+      return this;
     }
 
     /**
@@ -1244,122 +1242,122 @@ define([
      * @returns {Rectangle}
      */
     calcEnclosingRect() {
-      this.enclosingPoints = []
-      let last = new Point()
+      this.enclosingPoints = [];
+      let last = new Point();
       this.strokes.forEach(str => {
         str.getEnclosingPoints(last).forEach(pt => {
-          last = new Point(pt)
-          this.enclosingPoints.push(last)
-        })
-      })
+          last = new Point(pt);
+          this.enclosingPoints.push(last);
+        });
+      });
 
-      let l = this.enclosingPoints.length
+      let l = this.enclosingPoints.length;
       if (l > 1 && this.enclosingPoints[0].equals(this.enclosingPoints[l - 1])) {
-        this.enclosingPoints.pop()
-        l--
+        this.enclosingPoints.pop();
+        l--;
       }
       const
         p0 = new Point(this.enclosingPoints[0]),
-        p1 = new Point(this.enclosingPoints[0])
+        p1 = new Point(this.enclosingPoints[0]);
 
       for (let k = 1; k < l; k++) {
-        const p = this.enclosingPoints[k]
+        const p = this.enclosingPoints[k];
         // Check if `p` is at left or above `p0`
-        p0.x = Math.min(p.x, p0.x)
-        p0.y = Math.min(p.y, p0.y)
+        p0.x = Math.min(p.x, p0.x);
+        p0.y = Math.min(p.y, p0.y);
         // Check if `p` is at right or below `p1`
-        p1.x = Math.max(p.x, p1.x)
-        p1.y = Math.max(p.y, p1.y)
+        p1.x = Math.max(p.x, p1.x);
+        p1.y = Math.max(p.y, p1.y);
       }
-      this.enclosing.setBounds(new Rectangle(p0, new Dimension(p0, p1)))
-      return this.enclosing
+      this.enclosing.setBounds(new Rectangle(p0, new Dimension(p0, p1)));
+      return this.enclosing;
     }
 
     //
     // Inherits the documentation of `getBounds` in Shape
     getBounds() {
-      return this.enclosing
+      return this.enclosing;
     }
 
     //
     // Inherits the documentation of `moveBy` in Shape
     moveBy(delta) {
-      this.strokes.forEach(str => str.moveBy(delta))
-      this.enclosingPoints.forEach(pt => pt.moveBy(delta))
-      this.enclosing.moveBy(delta)
-      return this
+      this.strokes.forEach(str => str.moveBy(delta));
+      this.enclosingPoints.forEach(pt => pt.moveBy(delta));
+      this.enclosing.moveBy(delta);
+      return this;
     }
 
     //
     // Inherits the documentation of `moveTo` in Shape
     moveTo(newPos) {
-      return this.moveBy(new Dimension(newPos.x - this.pos.x, newPos.y - this.pos.y))
+      return this.moveBy(new Dimension(newPos.x - this.pos.x, newPos.y - this.pos.y));
     }
 
     //
     // Inherits the documentation of `equals` in Shape
     // TODO: Implement comparision of complex paths
     equals(_p) {
-      return false
+      return false;
     }
 
     //
     // Inherits the documentation of `scaleBy` in Shape
     scaleBy(delta) {
-      this.strokes.forEach(str => str.multBy(delta))
-      this.enclosingPoints.forEach(pt => pt.multBy(delta))
-      this.enclosing.scaleBy(delta)
-      return this
+      this.strokes.forEach(str => str.multBy(delta));
+      this.enclosingPoints.forEach(pt => pt.multBy(delta));
+      this.enclosing.scaleBy(delta);
+      return this;
     }
 
     //
     // Inherits the documentation of `contains` in Shape
     contains(p) {
-      let result = this.enclosing.contains(p)
+      let result = this.enclosing.contains(p);
       if (result) {
         // Let's see if the point really lies inside the polygon formed by enclosingPoints
         // Using the "Ray casting algorithm" described in [https://en.wikipedia.org/wiki/Point_in_polygon]
-        const N = this.enclosingPoints.length
+        const N = this.enclosingPoints.length;
         let
           xinters = 0,
           counter = 0,
-          p1 = this.enclosingPoints[0]
+          p1 = this.enclosingPoints[0];
 
         for (let i = 1; i <= N; i++) {
-          const p2 = this.enclosingPoints[i % N]
+          const p2 = this.enclosingPoints[i % N];
           if (p.y > Math.min(p1.y, p2.y)) {
             if (p.y <= Math.max(p1.y, p2.y)) {
               if (p.x <= Math.max(p1.x, p2.x)) {
                 if (p1.y !== p2.y) {
-                  xinters = (p.y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y) + p1.x
+                  xinters = (p.y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y) + p1.x;
                   if (p1.x === p2.x || p.x <= xinters)
-                    counter++
+                    counter++;
                 }
               }
             }
           }
-          p1 = p2
+          p1 = p2;
         }
         if (counter % 2 === 0)
-          result = false
+          result = false;
       }
-      return result
+      return result;
     }
 
     //
     // Inherits the documentation of `intersects` in Shape
     // TODO: Implement a check algorithm based on the real shape
     intersects(r) {
-      return this.enclosing.intersects(r)
+      return this.enclosing.intersects(r);
     }
 
     //
     // Inherits the documentation of `preparePath` in Shape
     preparePath(ctx) {
       // TODO: Implement filling paths
-      ctx.beginPath()
-      this.strokes.forEach(str => str.stroke(ctx))
-      return ctx
+      ctx.beginPath();
+      this.strokes.forEach(str => str.stroke(ctx));
+      return ctx;
     }
   }
 
@@ -1379,7 +1377,7 @@ define([
      * @name Path#enclosingPoints
      * @type {Point[]} */
     enclosingPoints: [],
-  })
+  });
 
   /**
    * PathStroke is the basic component of {@link Path} objects
@@ -1393,18 +1391,18 @@ define([
      * @param {Point[]} points - The array of {@link Point} objects used in this Stroke.
      */
     constructor(type, points) {
-      this.type = type
+      this.type = type;
       // Points are deep cloned, to avoid change the original values
       if (points && points.length > 0) {
         // Check if 'points' is an array of objects of type 'Point'
         if (points[0] instanceof Point)
-          this.points = points.map(p => new Point(p))
+          this.points = points.map(p => new Point(p));
         // otherwise assume that 'points' contains just numbers
         // to be readed in pairs of x and y co-ordinates
         else {
-          this.points = []
+          this.points = [];
           for (let i = 0; i < points.length; i += 2)
-            this.points.push(new Point(points[i], points[i + 1]))
+            this.points.push(new Point(points[i], points[i + 1]));
         }
       }
     }
@@ -1424,20 +1422,20 @@ define([
      */
     static getQuadraticPoints(p0, p1, p2, numPoints) {
       if (!numPoints)
-        numPoints = Utils.settings.BEZIER_POINTS
+        numPoints = Utils.settings.BEZIER_POINTS;
       const
         result = [],
         pxa = new Point(),
-        pxb = new Point()
+        pxb = new Point();
       for (let i = 0; i < numPoints; i++) {
-        const n = (i + 1) / (numPoints + 1)
-        pxa.x = p0.x + (p1.x - p0.x) * n
-        pxa.y = p0.y - (p0.y - p1.y) * n
-        pxb.x = p1.x + (p2.x - p1.x) * n
-        pxb.y = p1.y + (p2.y - p1.y) * n
-        result.push(new Point(pxa.x + (pxb.x - pxa.x) * n, pxa.y - (pxa.y - pxb.y) * n))
+        const n = (i + 1) / (numPoints + 1);
+        pxa.x = p0.x + (p1.x - p0.x) * n;
+        pxa.y = p0.y - (p0.y - p1.y) * n;
+        pxb.x = p1.x + (p2.x - p1.x) * n;
+        pxb.y = p1.y + (p2.y - p1.y) * n;
+        result.push(new Point(pxa.x + (pxb.x - pxa.x) * n, pxa.y - (pxa.y - pxb.y) * n));
       }
-      return result
+      return result;
     }
 
     /**
@@ -1452,16 +1450,16 @@ define([
      * @returns {Point[]} - Array with some intermediate points from the resulting Bézier curve
      */
     static getCubicPoints(p0, p1, p2, p3, numPoints) {
-      const result = []
+      const result = [];
       if (!numPoints)
-        numPoints = Utils.settings.BEZIER_POINTS
-      const pr = PathStroke.getQuadraticPoints(p0, p1, p2, numPoints)
-      const pq = PathStroke.getQuadraticPoints(p1, p2, p3, numPoints)
+        numPoints = Utils.settings.BEZIER_POINTS;
+      const pr = PathStroke.getQuadraticPoints(p0, p1, p2, numPoints);
+      const pq = PathStroke.getQuadraticPoints(p1, p2, p3, numPoints);
       for (let i = 0; i < numPoints; i++) {
-        const n = (i + 1) / (numPoints + 1)
-        result.push(new Point(pr[i].x + (pq[i].x - pr[i].x) * n, pr[i].y - (pr[0].y - pq[0].y) * n))
+        const n = (i + 1) / (numPoints + 1);
+        result.push(new Point(pr[i].x + (pq[i].x - pr[i].x) * n, pr[i].y - (pr[0].y - pq[0].y) * n));
       }
-      return result
+      return result;
     }
 
     /**
@@ -1470,7 +1468,7 @@ define([
      */
     clone() {
       // The constructors of PathStroke always make a deep copy of the `points` array
-      return new PathStroke(this.type, this.points)
+      return new PathStroke(this.type, this.points);
     }
 
     /**
@@ -1480,8 +1478,8 @@ define([
      */
     moveBy(delta) {
       if (this.points)
-        this.points.forEach(pt => pt.moveBy(delta))
-      return this
+        this.points.forEach(pt => pt.moveBy(delta));
+      return this;
     }
 
     /**
@@ -1491,8 +1489,8 @@ define([
      */
     multBy(delta) {
       if (this.points)
-        this.points.forEach(pt => pt.multBy(delta))
-      return this
+        this.points.forEach(pt => pt.multBy(delta));
+      return this;
     }
 
     /**
@@ -1502,27 +1500,27 @@ define([
     stroke(ctx) {
       switch (this.type) {
         case 'M':
-          ctx.moveTo(this.points[0].x, this.points[0].y)
-          break
+          ctx.moveTo(this.points[0].x, this.points[0].y);
+          break;
         case 'L':
-          ctx.lineTo(this.points[0].x, this.points[0].y)
-          break
+          ctx.lineTo(this.points[0].x, this.points[0].y);
+          break;
         case 'Q':
           ctx.quadraticCurveTo(
             this.points[0].x, this.points[0].y,
-            this.points[1].x, this.points[1].y)
-          break
+            this.points[1].x, this.points[1].y);
+          break;
         case 'B':
           ctx.bezierCurveTo(
             this.points[0].x, this.points[0].y,
             this.points[1].x, this.points[1].y,
-            this.points[2].x, this.points[2].y)
-          break
+            this.points[2].x, this.points[2].y);
+          break;
         case 'X':
-          ctx.closePath()
-          break
+          ctx.closePath();
+          break;
       }
-      return ctx
+      return ctx;
     }
 
     /**
@@ -1532,22 +1530,22 @@ define([
      * @returns {Point[]}
      */
     getEnclosingPoints(from) {
-      let result = []
+      let result = [];
       switch (this.type) {
         case 'M':
         case 'L':
-          result.push(this.points[0])
-          break
+          result.push(this.points[0]);
+          break;
         case 'Q':
-          result = PathStroke.getQuadraticPoints(from, this.points[0], this.points[1])
-          result.push(this.points[1])
-          break
+          result = PathStroke.getQuadraticPoints(from, this.points[0], this.points[1]);
+          result.push(this.points[1]);
+          break;
         case 'B':
-          result = PathStroke.getCubicPoints(from, this.points[0], this.points[1], this.points[2])
-          result.push(this.points[2])
-          break
+          result = PathStroke.getCubicPoints(from, this.points[0], this.points[1], this.points[2]);
+          result.push(this.points[2]);
+          break;
       }
-      return result
+      return result;
     }
   }
 
@@ -1563,7 +1561,7 @@ define([
      * @name PathStroke#points
      * @type {Point[]} */
     points: null,
-  })
+  });
 
   /**
    * This class encapsulates actions that can be linked to buttons, menus and other active objects
@@ -1576,9 +1574,9 @@ define([
      * @param {function} actionPerformed - The callback to be triggered by this Action
      */
     constructor(name, actionPerformed) {
-      this.name = name
-      this.actionPerformed = actionPerformed
-      this._statusListeners = []
+      this.name = name;
+      this.actionPerformed = actionPerformed;
+      this._statusListeners = [];
     }
 
     /**
@@ -1588,7 +1586,7 @@ define([
      * @param {object} _event - The original action event that has originated this action
      */
     actionPerformed(_thisAction, _event) {
-      return this
+      return this;
     }
 
     /**
@@ -1600,7 +1598,7 @@ define([
      * @param {object} event - The event object passed by the DOM event trigger
      */
     processEvent(event) {
-      return this.actionPerformed(this, event)
+      return this.actionPerformed(this, event);
     }
 
     /**
@@ -1609,7 +1607,7 @@ define([
      * Action changes
      */
     addStatusListener(listener) {
-      this._statusListeners.push(listener)
+      this._statusListeners.push(listener);
     }
 
     /**
@@ -1617,7 +1615,7 @@ define([
      * @param {function} listener - The listener to be removed
      */
     removeStatusListener(listener) {
-      this._statusListeners = this._statusListeners.map(l => l !== listener)
+      this._statusListeners = this._statusListeners.map(l => l !== listener);
     }
 
     /**
@@ -1625,9 +1623,9 @@ define([
      * @param {boolean} enabled
      */
     setEnabled(enabled) {
-      this.enabled = enabled
-      this._statusListeners.forEach(listener => listener.call(this, this))
-      return this
+      this.enabled = enabled;
+      this._statusListeners.forEach(listener => listener.call(this, this));
+      return this;
     }
   }
 
@@ -1653,7 +1651,7 @@ define([
      * @private
      * @type {function[]} */
     _statusListeners: null,
-  })
+  });
 
   /**
    * This class provides a timer that will launch a function at specific intervals
@@ -1667,9 +1665,9 @@ define([
      * @param {boolean=} [enabled=false] - Flag to indicate if the timer will be initially enabled.
      */
     constructor(actionPerformed, interval, enabled) {
-      this.actionPerformed = actionPerformed
-      this.interval = interval
-      this.setEnabled(enabled === true)
+      this.actionPerformed = actionPerformed;
+      this.interval = interval;
+      this.setEnabled(enabled === true);
     }
 
     /**
@@ -1677,7 +1675,7 @@ define([
      * @param {Timer} _thisTimer
      */
     actionPerformed(_thisTimer) {
-      return this
+      return this;
     }
 
     /**
@@ -1685,10 +1683,10 @@ define([
      * @param {Event} _event
      */
     processTimer(_event) {
-      this.ticks++
+      this.ticks++;
       if (!this.repeats)
-        this.stop()
-      return this.actionPerformed.call(this)
+        this.stop();
+      return this.actionPerformed.call(this);
     }
 
     /**
@@ -1698,21 +1696,21 @@ define([
      */
     setEnabled(enabled, retainCounter) {
       if (!retainCounter)
-        this.ticks = 0
+        this.ticks = 0;
       if (enabled && this.timer !== null) {
         // Timer already running
-        return
+        return;
       }
 
       if (enabled) {
-        this.timer = window.setInterval(() => this.processTimer(null), this.interval)
+        this.timer = window.setInterval(() => this.processTimer(null), this.interval);
       } else {
         if (this.timer !== null) {
-          window.clearInterval(this.timer)
-          this.timer = null
+          window.clearInterval(this.timer);
+          this.timer = null;
         }
       }
-      return this
+      return this;
     }
 
     /**
@@ -1720,7 +1718,7 @@ define([
      * @returns {Boolean}
      */
     isRunning() {
-      return this.timer !== null
+      return this.timer !== null;
     }
 
     /**
@@ -1728,7 +1726,7 @@ define([
      * @param {boolean=} [retainCounter=false] - When `true`, the ticks counter will not be cleared
      */
     start(retainCounter) {
-      return this.setEnabled(true, retainCounter)
+      return this.setEnabled(true, retainCounter);
     }
 
     /**
@@ -1736,7 +1734,7 @@ define([
      * @param {boolean=} [retainCounter=false] - When `true`, the ticks counter will not be cleared
      */
     stop(retainCounter) {
-      return this.setEnabled(false, retainCounter)
+      return this.setEnabled(false, retainCounter);
     }
   }
 
@@ -1761,7 +1759,7 @@ define([
      * @name Timer#repeats
      * @type {boolean} */
     repeats: true,
-  })
+  });
 
   /**
    * Logic object that takes care of an "invalidated" rectangle that will be repainted
@@ -1779,7 +1777,7 @@ define([
      * @param {number=} h
      */
     constructor(pos, dim, w, h) {
-      super(pos, dim, w, h)
+      super(pos, dim, w, h);
     }
 
     /**
@@ -1789,21 +1787,21 @@ define([
     invalidate(rect) {
       if (rect) {
         if (this.invalidatedRect === null)
-          this.invalidatedRect = rect.clone()
+          this.invalidatedRect = rect.clone();
         else
-          this.invalidatedRect.add(rect)
+          this.invalidatedRect.add(rect);
       } else
-        this.invalidatedRect = null
-      return this
+        this.invalidatedRect = null;
+      return this;
     }
 
     /**
      * Updates the invalidated area
      */
     update() {
-      this.updateContent(this.invalidatedRect)
-      this.invalidatedRect = null
-      return this
+      this.updateContent(this.invalidatedRect);
+      this.invalidatedRect = null;
+      return this;
     }
 
     /**
@@ -1814,7 +1812,7 @@ define([
      */
     updateContent(_dirtyRegion) {
       // To be overrided by subclasses. Here does nothing.
-      return this
+      return this;
     }
   }
 
@@ -1824,7 +1822,7 @@ define([
      * @name Container#invalidatedRect
      * @type {Rectangle} */
     invalidatedRect: null,
-  })
+  });
 
   // Returns a composite object with all classes
   return {
@@ -1841,5 +1839,5 @@ define([
     Action,
     Timer,
     Container
-  }
-})
+  };
+});

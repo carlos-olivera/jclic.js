@@ -69,5 +69,5 @@ define([
   "./activities/textGrid/CrossWord",
   "./report/TCPReporter",
   "./report/SessionStorageReporter"
-], () => 'Deep classes loaded!')
+], () => 'Deep classes loaded!');
 
