@@ -40,13 +40,13 @@ define([], function () {
     /**
      * Counter constructor
      * @param {string} id - The type of information stored on this counter
-     * @param {external:jQuery=} $div - The HTML element where this counter will show values (can be _null_)
+     * @param {external:HTMLElement=} div - The HTML element where this counter will show values (can be _null_)
      */
-    constructor(id, $div) {
+    constructor(id, div) {
       if (id)
-        this.id = id
-      if ($div)
-        this.$div = $div
+        this.id = id;
+      if (div)
+        this.div = div;
     }
 
     /**
@@ -54,10 +54,10 @@ define([], function () {
      * @returns {number}
      */
     getDisplayValue() {
-      let result = this.countDown > 0 ? this.countDown - this.value : this.value
+      let result = this.countDown > 0 ? this.countDown - this.value : this.value;
       if (this.displayDiffFrom)
-        result = result - this.displayDiffFrom.value
-      return Math.max(0, Math.min(this.MAX_DISPLAY_VALUE, result))
+        result = result - this.displayDiffFrom.value;
+      return Math.max(0, Math.min(this.MAX_DISPLAY_VALUE, result));
     }
 
     /**
@@ -65,8 +65,8 @@ define([], function () {
      * (method to be overridden by subclasses)
      */
     refreshDisplay() {
-      if (this.$div)
-        this.$div.html(this.enabled ? (this.getDisplayValue() + 1000).toString().substr(1) : '000')
+      if (this.div)
+        this.div.innerHTML = this.enabled ? (this.getDisplayValue() + 1000).toString().substr(1) : '000';
     }
 
     /**
@@ -75,10 +75,10 @@ define([], function () {
      */
     setEnabled(enabled) {
       if (this.enabled !== enabled) {
-        this.enabled = enabled
-        if (this.$div) {
-          this.refreshDisplay()
-          this.$div.css('opacity', this.enabled ? 1.0 : 0.3)
+        this.enabled = enabled;
+        if (this.div) {
+          this.refreshDisplay();
+          this.div.style.opacity = this.enabled ? 1.0 : 0.3;
         }
       }
     }
@@ -89,16 +89,16 @@ define([], function () {
      */
     setCountDown(maxValue) {
       if (this.countDown !== (this.countDown = maxValue))
-        this.refreshDisplay()
+        this.refreshDisplay();
     }
 
     /**
      * Increments by one the value of this counter
      */
     incValue() {
-      this.value++
+      this.value++;
       if (this.enabled)
-        this.refreshDisplay()
+        this.refreshDisplay();
     }
 
     /**
@@ -107,7 +107,7 @@ define([], function () {
      */
     setValue(value) {
       if (this.enabled && this.value !== (this.value = value))
-        this.refreshDisplay()
+        this.refreshDisplay();
     }
   }
 
@@ -120,9 +120,9 @@ define([], function () {
     /**
      * The HTML element where this counter shows its value
      * @name Counter#$div
-     * @type {external:jQuery}
+     * @type {external:HTMLElement}
      */
-    $div: null,
+    div: null,
     /**
      * Current value of this counter
      * @name Counter#value
@@ -150,8 +150,8 @@ define([], function () {
      * @type {Counter}
      */
     displayDiffFrom: null,
-  })
+  });
 
-  return Counter
+  return Counter;
 
-})
+});

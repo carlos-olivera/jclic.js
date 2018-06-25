@@ -506,30 +506,28 @@ define([
      * @returns {Promise} - The Promise returned by {@link Skin.showDlg}.
      */
     showReports(reporter) {
-      this.$reportsPanel.html(this.$printReport(reporter));
+      html.empty(this.reportsPanel);
+      html.append(this.reportsPanel, ...this.printReport(reporter));
       return this.showDlg(false, {
-        main: [this.$infoHead, this.$reportsPanel],
-        bottom: [this.$copyBtn, this.$closeDlgBtn]
+        main: [this.infoHead, this.reportsPanel],
+        bottom: [this.copyBtn, this.closeDlgBtn]
       });
     }
 
     /**
      * Formats the current report in a DOM tree, ready to be placed in `$reportsPanel`
      * @param {Reporter} reporter - The reporter system currently in use
-     * @returns {external:jQuery[]} - An array of jQuery objects containing the full report
+     * @returns {HTMLElement[]} - An array of elements containing the full report
      */
-    $printReport(reporter) {
+    printReport(reporter) {
       let result = [];
       if (reporter) {
-        const
-          html = Utils.HTML,
-          report = reporter.getData(),
-          started = new Date(report.started);
+        const report = reporter.getData();
+        const started = new Date(report.started);
 
-        result.push($('<div/>', { class: 'subTitle', id: this.ps.getUniqueId('ReportsLb') }).html(this.ps.getMsg('Current results')));
-
-        const $t = $('<table/>', { class: 'JCGlobalResults' });
-        $t.append(
+        result.push(html.div(this.ps.getMsg('Current results'), 'subTitle', null, { id: this.ps.getUniqueId('ReportsLb') }));
+        const t = html.element('table', null, 'JCGlobalResults');
+        html.append(t,
           html.doubleCell(
             this.ps.getMsg('Session started:'),
             `${started.toLocaleDateString()} ${started.toLocaleTimeString()}`),
@@ -537,20 +535,20 @@ define([
             this.ps.getMsg('Reports system:'),
             `${this.ps.getMsg(report.descriptionKey)} ${report.descriptionDetail}`));
         if (report.userId)
-          $t.append(html.doubleCell(
+          html.append(t, html.doubleCell(
             this.ps.getMsg('User:'),
             report.userId));
         else if (report.user) // SCORM user
-          $t.append(html.doubleCell(
+          html.append(t, html.doubleCell(
             this.ps.getMsg('User:'),
             report.user));
 
         if (report.sequences > 0) {
           if (report.sessions.length > 1)
-            $t.append(html.doubleCell(
+            html.append(t, html.doubleCell(
               this.ps.getMsg('Projects:'),
               report.sessions.length));
-          $t.append(
+          html.append(t,
             html.doubleCell(
               this.ps.getMsg('Sequences:'),
               report.sequences),
@@ -561,18 +559,18 @@ define([
               this.ps.getMsg('Activities played at least once:'),
               `${report.playedOnce}/${report.reportable} (${Utils.getPercent(report.ratioPlayed / 100)})`));
           if (report.activitiesDone > 0) {
-            $t.append(html.doubleCell(
+            html.append(t, html.doubleCell(
               this.ps.getMsg('Activities solved:'),
               `${report.activitiesSolved} (${Utils.getPercent(report.ratioSolved / 100)})`));
             if (report.actScore > 0)
-              $t.append(
+              html.append(t,
                 html.doubleCell(
                   this.ps.getMsg('Partial score:'),
                   `${Utils.getPercent(report.partialScore / 100)} ${this.ps.getMsg('(out of played activities)')}`),
                 html.doubleCell(
                   this.ps.getMsg('Global score:'),
                   `${Utils.getPercent(report.globalScore / 100)} ${this.ps.getMsg('(out of all project activities)')}`));
-            $t.append(
+            html.append(t,
               html.doubleCell(
                 this.ps.getMsg('Total time in activities:'),
                 Utils.getHMStime(report.time * 1000)),
@@ -580,52 +578,60 @@ define([
                 this.ps.getMsg('Actions done:'),
                 report.actions));
           }
-          result.push($t);
+          result.push(t);
 
           report.sessions.forEach(sr => {
             if (sr.sequences.length > 0) {
-              const $t = $('<table/>', { class: 'JCDetailed' });
-              result.push($('<p/>').html(report.sessions.length > 1 ? `${this.ps.getMsg('Project')} ${sr.projectName}` : ''));
-              $t.append($('<thead/>').append($('<tr/>').append(
-                html.th(this.ps.getMsg('sequence')),
-                html.th(this.ps.getMsg('activity')),
-                html.th(this.ps.getMsg('OK')),
-                html.th(this.ps.getMsg('actions')),
-                html.th(this.ps.getMsg('score')),
-                html.th(this.ps.getMsg('time')))));
+              const t = html.element('table', null, 'JCDetailed');
+              result.push(html.p(report.sessions.length > 1 ? `${this.ps.getMsg('Project')} ${sr.projectName}` : ''));
+              html.append(t,
+                html.append(html.element('thead'),
+                  html.append(html.element('tr'),
+                    html.th(this.ps.getMsg('sequence')),
+                    html.th(this.ps.getMsg('activity')),
+                    html.th(this.ps.getMsg('OK')),
+                    html.th(this.ps.getMsg('actions')),
+                    html.th(this.ps.getMsg('score')),
+                    html.th(this.ps.getMsg('time'))
+                  )
+                )
+              );
 
               sr.sequences.forEach(seq => {
-                let $tr = $('<tr/>').append($('<td/>', { rowspan: seq.activities.length }).html(seq.sequence));
+                let tr = html.append(html.element('tr'),
+                  html.element('td', seq.sequence, null, null, { rowspan: seq.activities.length }));
                 seq.activities.forEach(act => {
-                  if (act.closed) {
-                    $tr.append(html.td(act.name));
-                    $tr.append(act.solved ? html.td(this.ps.getMsg('YES'), 'ok') : html.td(this.ps.getMsg('NO'), 'no'));
-                    $tr.append(html.td(act.actions));
-                    $tr.append(html.td(Utils.getPercent(act.precision / 100)));
-                    $tr.append(html.td(Utils.getHMStime(act.time * 1000)));
-                  } else {
-                    $tr.append(html.td(act.name, 'incomplete'));
+                  if (act.closed)
+                    html.append(tr,
+                      html.td(act.name),
+                      act.solved ? html.td(this.ps.getMsg('YES'), 'ok') : html.td(this.ps.getMsg('NO'), 'no'),
+                      html.td(act.actions),
+                      html.td(Utils.getPercent(act.precision / 100)),
+                      html.td(Utils.getHMStime(act.time * 1000)));
+                  else {
+                    html.append(tr, html.td(act.name, 'incomplete'));
                     for (let r = 0; r < 4; r++)
-                      $tr.append(html.td('-', 'incomplete'));
+                      html.append(tr, html.td('-', 'incomplete'));
                   }
-                  $t.append($tr);
-                  $tr = $('<tr/>');
+                  html.append(t, tr);
+                  tr = html.element('tr');
                 });
               });
 
-              $t.append($('<tr/>').append(
-                html.td(this.ps.getMsg('Total:')),
-                html.td(`${sr.played} (${Utils.getPercent(sr.ratioPlayed / 100)})`),
-                html.td(`${sr.solved} (${Utils.getPercent(sr.ratioSolved / 100)})`),
-                html.td(sr.actions),
-                html.td(Utils.getPercent(sr.score / 100)),
-                html.td(Utils.getHMStime(sr.time * 1000))));
+              html.append(t,
+                html.append(html.element('tr'),
+                  html.td(this.ps.getMsg('Total:')),
+                  html.td(`${sr.played} (${Utils.getPercent(sr.ratioPlayed / 100)})`),
+                  html.td(`${sr.solved} (${Utils.getPercent(sr.ratioSolved / 100)})`),
+                  html.td(sr.actions),
+                  html.td(Utils.getPercent(sr.score / 100)),
+                  html.td(Utils.getHMStime(sr.time * 1000))));
 
-              result.push($t);
+              result.push(t);
             }
           }, this);
         } else
-          result.push($('<p/>').html(this.ps.getMsg('No activities done!')));
+          result.push(html.p(this.ps.getMsg('No activities done!')));
       }
       return result;
     }
@@ -653,24 +659,25 @@ define([
         window.setTimeout(() => {
 
           // Temporary remove canvas to let div get its natural size:
-          if (this.$msgBoxDivCanvas)
-            this.$msgBoxDivCanvas.remove();
+          if (this.msgBoxDivCanvas)
+            this.msgBoxDivCanvas.remove();
 
           // Get current size of message box div without canvas
           const
-            msgWidth = this.$msgBoxDiv.outerWidth(),
-            msgHeight = this.$msgBoxDiv.outerHeight();
+            msgWidth = this.msgBoxDiv.offsetWidth,
+            msgHeight = this.msgBoxDiv.offsetHeight;
 
           // Replace existing canvas if size has changed
-          if (this.$msgBoxDivCanvas === null ||
+          if (this.msgBoxDivCanvas === null ||
             this.msgBox.dim.widht !== msgWidth ||
             this.msgBox.dim.height !== msgHeight) {
-            this.$msgBoxDivCanvas = $(`<canvas width="${msgWidth}" height="${msgHeight}"/>`);
+            this.msgBoxDivCanvas = html.element(null, `<canvas width="${msgWidth}" height="${msgHeight}"/>`);
             this.msgBox.setBounds(new AWT.Rectangle(0, 0, msgWidth + 1, msgHeight));
-            this.msgBox.buildAccessibleElement(this.$msgBoxDivCanvas, this.$msgBoxDiv);
+            // TODO: build accessible element without jQuery!!
+            // this.msgBox.buildAccessibleElement(this.msgBoxDivCanvas, this.msgBoxDiv);
           }
           // restore canvas
-          this.$msgBoxDiv.append(this.$msgBoxDivCanvas);
+          this.msgBoxDiv.appendChild(this.msgBoxDivCanvas);
           this.updateContent();
         }, 0);
     }
@@ -681,7 +688,7 @@ define([
      */
     fit() {
       this.doLayout();
-      return new AWT.Dimension(this.$div.width(), this.$div.height());
+      return new AWT.Dimension(this.div.offsetWidth, this.div.offsetHeight);
     }
 
     /**
@@ -716,15 +723,15 @@ define([
 
     /**
      * Enables or disables an object
-     * @param {external:jQuery} $object - A JQuery DOM element
+     * @param {external:HTMLElement} object - A DOM element
      * @override
      * @param {boolean} enabled
      */
-    setEnabled($object, enabled) {
-      if ($object && enabled)
-        $object.removeAttr('disabled');
-      else if ($object)
-        $object.attr('disabled', true);
+    setEnabled(object, enabled) {
+      if (object && enabled)
+        object.removeAttribute('disabled');
+      else if (object)
+        object.setAttribute('disabled', true);
     }
 
     /**
@@ -782,13 +789,13 @@ define([
     /**
      * The HTML div object used by this Skin
      * @name Skin#$div
-     * @type {external:jQuery} */
-    $div: null,
+     * @type {external:HTMLElement} */
+    div: null,
     /**
      * The HTML div where JClic Player will be placed
      * @name Skin#$playerCnt
-     * @type {external:jQuery} */
-    $playerCnt: null,
+     * @type {external:HTMLElement} */
+    playerCnt: null,
     /**
      * Current name of the skin.
      * @name Skin#name
@@ -807,13 +814,13 @@ define([
     /**
      * Waiting panel, displayed while loading resources.
      * @name Skin#$waitPanel
-     * @type {external:jQuery} */
-    $waitPanel: null,
+     * @type {external:HTMLElement} */
+    waitPanel: null,
     /**
      * Graphic indicator of loading progress
      * @name Skin#$progress
-     * @type {external:jQuery} */
-    $progress: null,
+     * @type {external:HTMLElement} */
+    progress: null,
     /**
      * Current value of the progress bar
      * @name Skin#currentProgress
@@ -826,59 +833,59 @@ define([
     maxProgress: 0,
     /**
      * The box used to display the main messages of JClic activities
-     * @name DefaultSkin#msgBox
+     * @name Skin#msgBox
      * @type {ActiveBox} */
     msgBox: null,
     /**
      * The `div` DOM object where `msgBox` is located
-     * @name DefaultSkin#$msgBoxDiv
-     * @type {external:jQuery} */
-    $msgBoxDiv: null,
+     * @name Skin#$msgBoxDiv
+     * @type {external:HTMLElement} */
+    msgBoxDiv: null,
     /*
      * An HTML `canvas` object created in `$msgBoxDiv`
-     * @name DefaultSkin#$msgBoxDivCanvas
-     * @type {external:jQuery} */
-    $msgBoxDivCanvas: null,
+     * @name Skin#$msgBoxDivCanvas
+     * @type {external:HTMLElement} */
+    msgBoxDivCanvas: null,
     /**
      * Main panel used to display modal and non-modal dialogs
      * @name Skin#$dlgOverlay
-     * @type {external:jQuery} */
-    $dlgOverlay: null,
+     * @type {external:HTMLElement} */
+    dlgOverlay: null,
     /**
      * Main panel of dialogs, where relevant information must be placed
      * @name Skin#$dlgMainPanel
-     * @type {external:jQuery} */
-    $dlgMainPanel: null,
+     * @type {external:HTMLElement} */
+    dlgMainPanel: null,
     /**
      * Bottom panel of dialogs, used for action buttons
      * @name Skin#$dlgBottomPanel
-     * @type {external:jQuery} */
-    $dlgBottomPanel: null,
+     * @type {external:HTMLElement} */
+    dlgBottomPanel: null,
     /**
      * Element usually used as header in dialogs, with JClic logo, name and version
      * @name Skin#infoHead
-     * @type {external:jQuery} */
-    $infoHead: null,
+     * @type {external:HTMLElement} */
+    infoHead: null,
     /**
      * Iconic button used to copy content to clipboard
      * @name Skin#$copyBtn
-     * @type {external:jQuery} */
-    $copyBtn: null,
+     * @type {external:HTMLElement} */
+    copyBtn: null,
     /**
      * Iconic button used to close the dialog
      * @name Skin#$closeDlgBtn
-     * @type {external:jQuery} */
-    $closeDlgBtn: null,
+     * @type {external:HTMLElement} */
+    closeDlgBtn: null,
     /**
      * OK dialog button
      * @name Skin#$okDlgBtn
-     * @type {external:jQuery} */
-    $okDlgBtn: null,
+     * @type {external:HTMLElement} */
+    okDlgBtn: null,
     /**
      * Cancel dialog button
      * @name Skin#$cancelDlgBtn
-     * @type {external:jQuery} */
-    $cancelDlgBtn: null,
+     * @type {external:HTMLElement} */
+    cancelDlgBtn: null,
     /**
      * Value to be returned by the dialog promise when the presented task is fulfilled
      * @name Skin#_dlgOkValue
@@ -897,8 +904,8 @@ define([
     /**
      * Div inside {@link $dlgOverlay} where JClicPlayer will place the information to be shown
      * @name Skin#$reportsPanel
-     * @type {external:jQuery} */
-    $reportsPanel: null,
+     * @type {external:HTMLElement} */
+    reportsPanel: null,
     /**
      * The basic collection of buttons that most skins implement
      * @name Skin#buttons
