@@ -116,11 +116,11 @@ define([
         display: 'none',
         'background-color': 'rgba(30,30,30,0.7)'
       });
-      this.dlgOverlay.addEventListener('click', () => {
+      this.dlgOverlay.addEventListener('click', ev => {
         if (!this._isModalDlg)
           // Non-modal dialogs are closed on click outside the main area
           this._closeDlg(true);
-        return false;
+        ev.stopPropagation();
       });
 
       const dlgDiv = html.div(null, 'dlgDiv',
@@ -136,9 +136,9 @@ define([
           'aria-describedby': ps.getUniqueId('ReportsCnt'),
         });
 
-      dlgDiv.addEventListener('click', () => {
+      dlgDiv.addEventListener('click', ev => {
         // Clicks not passed to parent
-        return false;
+        ev.stopPropagation();
       });
 
       this.dlgMainPanel = html.div(null, 'dlgMainPanel', null, { id: ps.getUniqueId('ReportsCnt') });
@@ -163,7 +163,7 @@ define([
       });
 
       this.infoHead = html.append(html.div(null, 'infoHead'),
-        html.append(html.div(this.appLogo, 'headTitle unselectableText'),
+        html.append(html.div(null, 'headTitle unselectableText'),
           logo,
           html.element('span', 'JClic.js')
         ),
@@ -177,32 +177,32 @@ define([
       this.reportsPanel = html.div(null, 'reportsPanel', null, { role: 'document' });
 
       msg = ps.getMsg('Copy data to clipboard');
-      this.copyBtn = html.append(html.element('button', null, null, { title: msg, 'aria-label': msg },
-        html.element(null, this.copyIcon, { width: '26px', height: '26px' }))
+      this.copyBtn = html.append(html.element('button', null, null, null, { title: msg, 'aria-label': msg }),
+        html.element(null, this.copyIcon, null, { width: '26px', height: '26px' })
       );
       this.copyBtn.addEventListener('click', () => {
         clipboard.copy({
           'text/plain': `===> ${ps.getMsg('The data has been copied in HTML format. Please paste them into a spreadsheet or in a rich text editor')} <===`,
-          'text/html': this.$reportsPanel.html(),
+          'text/html': this.reportsPanel.innerHTML,
         });
         // TODO: Show "The data has been copied to clipboard" popup with fadein, fadeout and remove
       });
 
       msg = ps.getMsg('Close');
-      this.closeBtn = html.append(html.element('button', null, null, null, { title: msg, 'aria-label': msg }),
-        html.element(null, this.closeDialogIcon, { width: '26px', height: '26px' })
+      this.closeDlgBtn = html.append(html.element('button', null, null, null, { title: msg, 'aria-label': msg }),
+        html.element(null, this.closeDialogIcon, null, { width: '26px', height: '26px' })
       );
-      this.closeBtn.addEventListener('click', () => this._closeDlg(true));
+      this.closeDlgBtn.addEventListener('click', () => this._closeDlg(true));
 
       msg = ps.getMsg('OK');
       this.okDlgBtn = html.append(html.element('button', null, null, null, { title: msg, 'aria-label': msg }),
-        html.element(null, this.okDialogIcon, { width: '26px', height: '26px' })
+        html.element(null, this.okDialogIcon, null, { width: '26px', height: '26px' })
       );
       this.okDlgBtn.addEventListener('click', () => this._closeDlg(true));
 
       msg = ps.getMsg('Cancel');
       this.cancelDlgBtn = html.append(html.element('button', null, null, null, { title: msg, 'aria-label': msg }),
-        html.element(null, this.closeDialogIcon, { width: '26px', height: '26px' })
+        html.element(null, this.closeDialogIcon, null, { width: '26px', height: '26px' })
       );
       this.cancelDlgBtn.addEventListener('click', () => this._closeDlg(false));
 
@@ -451,7 +451,7 @@ define([
      * Shows a "dialog" panel, useful for displaying information or prompt something to users
      * @param {boolean} modal - When `true`, the dialog should be closed by any click outside the main panel
      * @param {object} options - This object should have two components: `main` and `bottom`, both
-     * containing a jQuery HTML element (or array of elements) to be placed on the main and bottom panels
+     * containing an HTML element (or array of elements) to be placed on the main and bottom panels
      * of the dialog.
      * @returns {Promise} - A Promise that will be fulfilled when the dialog is closed.
      */
@@ -464,9 +464,9 @@ define([
         html.empty(this.dlgMainPanel);
         html.empty(this.dlgBottomPanel);
         if (options.main)
-          this.dlgMainPanel.appendChild(options.main);
+          html.append(this.dlgMainPanel, ...options.main);
         if (options.bottom)
-          this.dlgBottomPanel.appendChild(options.bottom);
+          html.append(this.dlgBottomPanel, ...options.bottom);
 
         this._closeDlg = resolved => {
           if (resolved && resolve)
@@ -515,7 +515,7 @@ define([
     }
 
     /**
-     * Formats the current report in a DOM tree, ready to be placed in `$reportsPanel`
+     * Formats the current report in a DOM tree, ready to be placed in `reportsPanel`
      * @param {Reporter} reporter - The reporter system currently in use
      * @returns {HTMLElement[]} - An array of elements containing the full report
      */
@@ -655,7 +655,7 @@ define([
 
       // Build ths canvas at the end of current thread, thus avoiding
       // invalid sizes due to incomplete layout of DOM objects
-      if (this.$msgBoxDiv)
+      if (this.msgBoxDiv)
         window.setTimeout(() => {
 
           // Temporary remove canvas to let div get its natural size:
@@ -683,7 +683,7 @@ define([
     }
 
     /**
-     * adjusts the skin to the dimension of its `$div` container
+     * adjusts the skin to the dimension of its `div` container
      * @returns {AWT.Dimension} the new dimension of the skin
      */
     fit() {
@@ -788,12 +788,12 @@ define([
     skinId: 'JClicBasicSkin',
     /**
      * The HTML div object used by this Skin
-     * @name Skin#$div
+     * @name Skin#div
      * @type {external:HTMLElement} */
     div: null,
     /**
      * The HTML div where JClic Player will be placed
-     * @name Skin#$playerCnt
+     * @name Skin#playerCnt
      * @type {external:HTMLElement} */
     playerCnt: null,
     /**
@@ -813,12 +813,12 @@ define([
     fileName: '',
     /**
      * Waiting panel, displayed while loading resources.
-     * @name Skin#$waitPanel
+     * @name Skin#waitPanel
      * @type {external:HTMLElement} */
     waitPanel: null,
     /**
      * Graphic indicator of loading progress
-     * @name Skin#$progress
+     * @name Skin#progress
      * @type {external:HTMLElement} */
     progress: null,
     /**
@@ -838,27 +838,27 @@ define([
     msgBox: null,
     /**
      * The `div` DOM object where `msgBox` is located
-     * @name Skin#$msgBoxDiv
+     * @name Skin#msgBoxDiv
      * @type {external:HTMLElement} */
     msgBoxDiv: null,
     /*
-     * An HTML `canvas` object created in `$msgBoxDiv`
-     * @name Skin#$msgBoxDivCanvas
+     * An HTML `canvas` object created in `msgBoxDiv`
+     * @name Skin#msgBoxDivCanvas
      * @type {external:HTMLElement} */
     msgBoxDivCanvas: null,
     /**
      * Main panel used to display modal and non-modal dialogs
-     * @name Skin#$dlgOverlay
+     * @name Skin#dlgOverlay
      * @type {external:HTMLElement} */
     dlgOverlay: null,
     /**
      * Main panel of dialogs, where relevant information must be placed
-     * @name Skin#$dlgMainPanel
+     * @name Skin#dlgMainPanel
      * @type {external:HTMLElement} */
     dlgMainPanel: null,
     /**
      * Bottom panel of dialogs, used for action buttons
-     * @name Skin#$dlgBottomPanel
+     * @name Skin#dlgBottomPanel
      * @type {external:HTMLElement} */
     dlgBottomPanel: null,
     /**
@@ -868,22 +868,22 @@ define([
     infoHead: null,
     /**
      * Iconic button used to copy content to clipboard
-     * @name Skin#$copyBtn
+     * @name Skin#copyBtn
      * @type {external:HTMLElement} */
     copyBtn: null,
     /**
      * Iconic button used to close the dialog
-     * @name Skin#$closeDlgBtn
+     * @name Skin#closeDlgBtn
      * @type {external:HTMLElement} */
     closeDlgBtn: null,
     /**
      * OK dialog button
-     * @name Skin#$okDlgBtn
+     * @name Skin#okDlgBtn
      * @type {external:HTMLElement} */
     okDlgBtn: null,
     /**
      * Cancel dialog button
-     * @name Skin#$cancelDlgBtn
+     * @name Skin#cancelDlgBtn
      * @type {external:HTMLElement} */
     cancelDlgBtn: null,
     /**
@@ -902,8 +902,8 @@ define([
      * @type {boolean} */
     _isModalDlg: false,
     /**
-     * Div inside {@link $dlgOverlay} where JClicPlayer will place the information to be shown
-     * @name Skin#$reportsPanel
+     * Div inside {@link dlgOverlay} where JClicPlayer will place the information to be shown
+     * @name Skin#reportsPanel
      * @type {external:HTMLElement} */
     reportsPanel: null,
     /**

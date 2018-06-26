@@ -547,7 +547,11 @@ define([
         }
 
         static css(element, styles) {
-          Object.keys(styles).forEach(k => element.style[k] = styles[k]);
+          Object.keys(styles).forEach(k => {
+            // See Tim Down's answer to: https://stackoverflow.com/a/4969647
+            const kCamel = k.replace(/-([a-z])/gi, (s, group) => group.toUpperCase());
+            element.style[kCamel] = styles[k];
+          });
           return element;
         }
 
@@ -706,8 +710,9 @@ define([
      * object. It should take two parametres: `name` and `value`
      */
     static attrForEach(attributes, callback) {
-      for (let i = 0; i < attributes.length; i++)
-        callback(attributes[i].name, attributes[i].value);
+      if (attributes)
+        for (let i = 0; i < attributes.length; i++)
+          callback(attributes[i].name, attributes[i].value);
     }
 
     /**

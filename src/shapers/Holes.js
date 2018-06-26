@@ -31,9 +31,8 @@
 /* global define */
 
 define([
-  "jquery",
   "./Shaper"
-], function ($, Shaper) {
+], function (Shaper) {
 
   /**
    * This {@link Shaper} consists of a set of arbitrary shapes placed over a main rectangle that
@@ -53,10 +52,10 @@ define([
      * @param {number} ny - Not used
      */
     constructor(nx, ny) {
-      super(1, 1)
-      this.nCols = nx
-      this.nRows = ny
-      this.showEnclosure = true
+      super(1, 1);
+      this.nCols = nx;
+      this.nRows = ny;
+      this.showEnclosure = true;
     }
 
     /**
@@ -65,7 +64,7 @@ define([
      */
     buildShapes() {
       if (this.nCells > 0)
-        this.initiated = true
+        this.initiated = true;
     }
 
     /**
@@ -74,12 +73,12 @@ define([
      * @returns {AWT.Rectangle}
      */
     getEnclosingShapeData() {
-      return this.showEnclosure ? (this.enclosing || super.getEnclosingShapeData()) : null
+      return this.showEnclosure ? (this.enclosing || super.getEnclosingShapeData()) : null;
     }
   }
 
   // Register this class in the list of known shapers
-  Shaper.CLASSES['@Holes'] = Holes
+  Shaper.CLASSES['@Holes'] = Holes;
 
-  return Holes
-})
+  return Holes;
+});

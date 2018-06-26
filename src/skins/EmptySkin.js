@@ -31,9 +31,8 @@
 /* global define */
 
 define([
-  "jquery",
   "./Skin"
-], function ($, Skin) {
+], function (Skin) {
 
   /**
    * A minimalist {@link Skin} for JClic.js with just the player, without messages, counters nor any button.
@@ -53,7 +52,7 @@ define([
      */
     constructor(ps, name = null, options = {}) {
       // EmptySkin extends [Skin](Skin.html)
-      super(ps, name, options)
+      super(ps, name, options);
     }
     /**
      * Returns the CSS styles used by this skin. This method should be called only from
@@ -62,7 +61,7 @@ define([
      * @returns {string}
      */
     _getStyleSheets(media = 'default') {
-      return super._getStyleSheets(media) + (media === 'default' ? this.mainCSS : '')
+      return super._getStyleSheets(media) + (media === 'default' ? this.mainCSS : '');
     }
 
   }
@@ -80,10 +79,10 @@ define([
      * @override
      * @type {string} */
     mainCSS: '.ID .JClicPlayerCnt {margin:0;}'
-  })
+  });
 
   // Register this class in the list of available skins
-  Skin.CLASSES['empty'] = EmptySkin
+  Skin.CLASSES['empty'] = EmptySkin;
 
-  return EmptySkin
-})
+  return EmptySkin;
+});

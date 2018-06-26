@@ -31,10 +31,10 @@
 /* global define */
 
 define([
-  "jquery",
   "./Skin",
-  "./DefaultSkin"
-], function ($, Skin, DefaultSkin) {
+  "./DefaultSkin",
+  "../Utils"
+], function (Skin, DefaultSkin, Utils) {
 
   /**
    * This is a variant of the default {@link Skin} used by JClic.js
@@ -53,12 +53,15 @@ define([
      */
     constructor(ps, name = null, options = {}) {
       // OrangeSkin extends [DefaultSkin](DefaultSkin.html)
-      super(ps, name, Object.assign({}, options, { counters: false, reportsBtn: true }))
+      super(ps, name, Object.assign({}, options, { counters: false, reportsBtn: true }));
 
-      this.$ctrlCnt.detach().prependTo(this.$div)
-      this.$msgBoxDiv.detach().appendTo(this.$div)
+      this.ctrlCnt.remove();
+      this.div.insertBefore(this.ctrlCnt, this.div.firstChild);
+      this.msgBoxDiv.remove();
+      this.div.appendChild(this.msgBoxDiv);
       // Add a spacing div in substitution of msgBox
-      $('<div/>').css({ 'flex-grow': 1 }).insertAfter(this.$ctrlCnt.children(':nth-child(2)'))
+      const separator = Utils.HTML.div(null, null, { 'flex-grow': 1 });
+      this.ctrlCnt.insertBefore(separator, this.ctrlCnt.querySelector(':nth-child(2)').nextSibling);
     }
 
     /**
@@ -68,7 +71,7 @@ define([
      * @returns {string}
      */
     _getStyleSheets(media = 'default') {
-      return `${super._getStyleSheets(media)}${media === 'default' ? this.skinCSS : media === 'half' ? this.skinCSSHalf : media === 'twoThirds' ? this.skinCSSTwoThirds : ''}`
+      return `${super._getStyleSheets(media)}${media === 'default' ? this.skinCSS : media === 'half' ? this.skinCSSHalf : media === 'twoThirds' ? this.skinCSSTwoThirds : ''}`;
     }
   }
 
@@ -96,11 +99,11 @@ define([
 .ID .JClicCtrlCnt {margin:6px;}\
 .ID .JClicPlayerCnt {margin:0px 12px 12px;}\
 .ID .JClicMsgBox {margin:0 12px 12px 12px;}',
-  })
+  });
 
   // Register this class in the list of available skins
-  Skin.CLASSES['simple'] = SimpleSkin
+  Skin.CLASSES['simple'] = SimpleSkin;
 
-  return SimpleSkin
+  return SimpleSkin;
 
-})
+});

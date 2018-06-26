@@ -31,11 +31,10 @@
 /* global define */
 
 define([
-  "jquery",
   "./Shaper",
   "./JigSaw",
   "../AWT"
-], function ($, Shaper, JigSaw, AWT) {
+], function (Shaper, JigSaw, AWT) {
   /**
    * This {@link Shaper} returns a set of rectangular shapes with triangular teeth and slots that
    * fit between them.
@@ -50,7 +49,7 @@ define([
      * @param {number} ny - Number of rows
      */
     constructor(nx, ny) {
-      super(nx, ny)
+      super(nx, ny);
     }
 
     /**
@@ -67,22 +66,22 @@ define([
     hLine(sd, type, x, y, w, h, inv) {
       const
         kx = inv ? -1 : 1,
-        ky = type === 1 ? 1 : -1
+        ky = type === 1 ? 1 : -1;
 
       if (type === 0)
         // Flat line
-        sd.addStroke(new AWT.PathStroke('L', [x + w * kx, y]))
+        sd.addStroke(new AWT.PathStroke('L', [x + w * kx, y]));
       else {
-        const x0 = x + (w - w * this.baseWidthFactor) / 2 * kx
-        const wb = w * this.baseWidthFactor * kx
+        const x0 = x + (w - w * this.baseWidthFactor) / 2 * kx;
+        const wb = w * this.baseWidthFactor * kx;
         // Approximation to the tooth:
-        sd.addStroke(new AWT.PathStroke('L', [x0, y]))
+        sd.addStroke(new AWT.PathStroke('L', [x0, y]));
         // This is the tooth:
-        const hb = h * this.toothHeightFactor * ky
-        sd.addStroke(new AWT.PathStroke('L', [x0 + wb / 2, y + hb]))
-        sd.addStroke(new AWT.PathStroke('L', [x0 + wb, y]))
+        const hb = h * this.toothHeightFactor * ky;
+        sd.addStroke(new AWT.PathStroke('L', [x0 + wb / 2, y + hb]));
+        sd.addStroke(new AWT.PathStroke('L', [x0 + wb, y]));
         // Draw the remaining line
-        sd.addStroke(new AWT.PathStroke('L', [x + w * kx, y]))
+        sd.addStroke(new AWT.PathStroke('L', [x + w * kx, y]));
       }
     }
 
@@ -100,30 +99,30 @@ define([
     vLine(sd, type, x, y, w, h, inv) {
       const
         ky = inv ? -1 : 1,
-        kx = type === 1 ? 1 : -1
+        kx = type === 1 ? 1 : -1;
 
       if (type === 0)
         // Flat line
-        sd.addStroke(new AWT.PathStroke('L', [x, y + h * ky]))
+        sd.addStroke(new AWT.PathStroke('L', [x, y + h * ky]));
       else {
         const
           y0 = y + (h - h * this.baseWidthFactor) / 2 * ky,
-          hb = h * this.baseWidthFactor * ky
+          hb = h * this.baseWidthFactor * ky;
 
         // Approximation to the tooth:
-        sd.addStroke(new AWT.PathStroke('L', [x, y0]))
+        sd.addStroke(new AWT.PathStroke('L', [x, y0]));
         // This is the tooth:
-        const wb = w * this.toothHeightFactor * kx
-        sd.addStroke(new AWT.PathStroke('L', [x + wb, y0 + hb / 2]))
-        sd.addStroke(new AWT.PathStroke('L', [x, y0 + hb]))
+        const wb = w * this.toothHeightFactor * kx;
+        sd.addStroke(new AWT.PathStroke('L', [x + wb, y0 + hb / 2]));
+        sd.addStroke(new AWT.PathStroke('L', [x, y0 + hb]));
         // Draw the remaining line
-        sd.addStroke(new AWT.PathStroke('L', [x, y + h * ky]))
+        sd.addStroke(new AWT.PathStroke('L', [x, y + h * ky]));
       }
     }
   }
 
   // Register this class in the list of known shapers
-  Shaper.CLASSES['@TriangularJigSaw'] = TriangularJigSaw
+  Shaper.CLASSES['@TriangularJigSaw'] = TriangularJigSaw;
 
-  return TriangularJigSaw
-})
+  return TriangularJigSaw;
+});

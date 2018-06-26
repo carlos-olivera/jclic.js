@@ -243,7 +243,7 @@ define([
   if (typeof window !== 'undefined') {
     window.JClicObject = JClicObject;
     const fnFit = () => JClicObject.currentPlayers.forEach(player => { if (player && player.skin) player.skin.fit(); });
-    ['webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange'].forEach(ev => document.addEventListener(ev, fnFit));
+    ['webkitfullscreenchange', 'mozfullscreenchange', 'fullscreenchange', 'MSFullscreenChange'].forEach(ev => document.addEventListener(ev, fnFit));
     window.addEventListener('resize', fnFit);
   }
 

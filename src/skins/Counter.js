@@ -119,7 +119,7 @@ define([], function () {
     id: '',
     /**
      * The HTML element where this counter shows its value
-     * @name Counter#$div
+     * @name Counter#div
      * @type {external:HTMLElement}
      */
     div: null,

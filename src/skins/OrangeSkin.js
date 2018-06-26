@@ -31,10 +31,9 @@
 /* global define */
 
 define([
-  "jquery",
   "./Skin",
   "./DefaultSkin"
-], function ($, Skin, DefaultSkin) {
+], function (Skin, DefaultSkin) {
 
   /**
    * This is a variant of the default {@link Skin} used by JClic.js
@@ -53,7 +52,7 @@ define([
      */
     constructor(ps, name = null, options = {}) {
       // OrangeSkin extends [DefaultSkin](DefaultSkin.html)
-      super(ps, name, options)
+      super(ps, name, options);
     }
 
     /**
@@ -63,7 +62,7 @@ define([
      * @returns {string}
      */
     _getStyleSheets(media = 'default') {
-      return super._getStyleSheets(media) + (media === 'default' ? this.skinCSS : '')
+      return super._getStyleSheets(media) + (media === 'default' ? this.skinCSS : '');
     }
   }
 
@@ -79,10 +78,10 @@ define([
      * @name OrangeSkin#skinCSS
      * @type {string} */
     skinCSS: '.ID {background-color:#FF8B19;}'
-  })
+  });
 
   // Register this class in the list of available skins
-  Skin.CLASSES['orange'] = OrangeSkin
+  Skin.CLASSES['orange'] = OrangeSkin;
 
-  return OrangeSkin
-})
+  return OrangeSkin;
+});
