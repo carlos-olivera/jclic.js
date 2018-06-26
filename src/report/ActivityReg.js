@@ -31,10 +31,9 @@
 /* global define */
 
 define([
-  "jquery",
   "../Utils",
   "./ActionReg"
-], function ($, Utils, ActionReg) {
+], function (Utils, ActionReg) {
   /**
    * This class stores miscellaneous data obtained by the current user playing an {@link Activity}.
    * @exports ActivityReg
@@ -46,20 +45,20 @@ define([
      * @param {Activity} act - The {@link Activity} referenced by this object.
      */
     constructor(act) {
-      this.name = act.name
-      this.code = act.code
-      this.actions = []
-      this.startTime = (new Date()).valueOf()
-      this.minActions = act.getMinNumActions()
-      this.reportActions = act.reportActions
+      this.name = act.name;
+      this.code = act.code;
+      this.actions = [];
+      this.startTime = (new Date()).valueOf();
+      this.minActions = act.getMinNumActions();
+      this.reportActions = act.reportActions;
     }
 
     /**
      * Provides the data associated with the current activity in an XML format suitable for a
      * {@link http://clic.xtec.cat/en/jclic/reports/|JClic Reports Server}.
-     * @returns {external:jQuery}
+     * @returns {external:Element}
      */
-    $getXML() {
+    getXML() {
       const attr = {
         start: this.startTime,
         time: this.totalTime,
@@ -67,21 +66,21 @@ define([
         score: this.score,
         minActions: this.minActions,
         actions: this.numActions
-      }
+      };
       if (this.name)
-        attr.name = this.name
+        attr.name = this.name;
       if (this.code)
-        attr.code = this.code
+        attr.code = this.code;
       if (!this.closed)
-        attr.closed = false
+        attr.closed = false;
       if (this.reportActions)
-        attr.reportActions = true
+        attr.reportActions = true;
 
-      const $result = $('<activity/>', attr)
+      const result = Utils.HTML.element('activity', null, null, null, attr);
       this.actions.forEach(ac => {
-        $result.append(ac.$getXML())
-      })
-      return $result
+        result.appendChild(ac.getXML());
+      });
+      return result;
     }
 
     /**
@@ -98,42 +97,42 @@ define([
         actions: this.numActions,
         precision: this.getPrecision(),
         closed: this.closed
-      }
+      };
       if (this.code)
-        result.code = this.code
-      return result
+        result.code = this.code;
+      return result;
     }
 
     /**
      * Fills this ActivityReg with data provided in XML format
-     * @param {external:jQuery} $xml -The XML element to be processed, already wrapped as jQuery object
+     * @param {external:Element} xml -The XML element to be processed
      */
-    setProperties($xml) {
-      Utils.attrForEach($xml.get(0).attributes, (name, value) => {
+    setProperties(xml) {
+      Utils.attrForEach(xml.attributes, (name, value) => {
         switch (name) {
           case 'name':
           case 'code':
-            this[name] = value
-            break
+            this[name] = value;
+            break;
           case 'start':
           case 'time':
           case 'score':
           case 'minActions':
           case 'actions':
-            this[name] = Number(value)
-            break
+            this[name] = Number(value);
+            break;
           case 'solved':
           case 'closed':
           case 'reportActions':
-            this[name] = Utils.getBoolean(value, false)
-            break
+            this[name] = Utils.getBoolean(value, false);
+            break;
         }
-      })
-      $xml.children('action').each((_n, child) => {
-        const action = new ActionReg()
-        action.setProperties($(child))
-        this.actions.push(action)
-      })
+      });
+      xml.querySelectorAll('action').forEach(child => {
+        const action = new ActionReg();
+        action.setProperties(child);
+        this.actions.push(action);
+      });
     }
 
     /**
@@ -145,8 +144,8 @@ define([
      */
     newAction(type, source, dest, ok) {
       if (!this.closed) {
-        this.lastAction = new ActionReg(type, source, dest, ok)
-        this.actions.push(this.lastAction)
+        this.lastAction = new ActionReg(type, source, dest, ok);
+        this.actions.push(this.lastAction);
       }
     }
 
@@ -156,7 +155,7 @@ define([
      * @returns {ActionReg}
      */
     getActionReg(index) {
-      return index >= this.actions.length ? null : this.actions[index]
+      return index >= this.actions.length ? null : this.actions[index];
     }
 
     /**
@@ -165,10 +164,10 @@ define([
     closeActivity() {
       if (!this.closed) {
         if (this.lastAction)
-          this.totalTime = this.lastAction.time - this.startTime
+          this.totalTime = this.lastAction.time - this.startTime;
         else
-          this.totalTime = (new Date()).valueOf() - this.startTime
-        this.closed = true
+          this.totalTime = (new Date()).valueOf() - this.startTime;
+        this.closed = true;
       }
     }
 
@@ -179,17 +178,17 @@ define([
      * @returns {number}
      */
     getPrecision() {
-      let result = 0
+      let result = 0;
       if (this.closed && this.minActions > 0 && this.numActions > 0) {
         if (this.solved) {
           if (this.numActions < this.minActions)
-            result = 100
+            result = 100;
           else
-            result = Math.round(this.minActions * 100 / this.numActions)
+            result = Math.round(this.minActions * 100 / this.numActions);
         } else
-          result = Math.round(100 * (this.score * this.score) / (this.minActions * this.numActions))
+          result = Math.round(100 * (this.score * this.score) / (this.minActions * this.numActions));
       }
-      return result
+      return result;
     }
 
     /**
@@ -201,10 +200,10 @@ define([
      */
     endActivity(score, numActions, solved) {
       if (!this.closed) {
-        this.solved = solved
-        this.numActions = numActions
-        this.score = score
-        this.closeActivity()
+        this.solved = solved;
+        this.numActions = numActions;
+        this.score = score;
+        this.closeActivity();
       }
     }
   }
@@ -270,7 +269,7 @@ define([
      * @name ActivityReg#numActions
      * @type {number} */
     numActions: 0,
-  })
+  });
 
-  return ActivityReg
-})
+  return ActivityReg;
+});

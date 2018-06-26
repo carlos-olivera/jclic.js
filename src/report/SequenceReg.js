@@ -31,9 +31,8 @@
 /* global define */
 
 define([
-  "jquery",
   "./ActivityReg"
-], function ($, ActivityReg) {
+], function (ActivityReg) {
 
   /**
    * This class stores the results of the activities related to an {@link ActivitySequenceElement}.
@@ -47,13 +46,13 @@ define([
      * @param {ActivitySequenceElement} ase - The {@link ActivitySequenceElement} related to this sequence.
      */
     constructor(ase) {
-      this.name = ase.tag
-      this.description = ase.description
-      this.activities = []
-      this.currentActivity = null
-      this.totalTime = 0
-      this.closed = false
-      this.info = new SequenceRegInfo(this)
+      this.name = ase.tag;
+      this.description = ase.description;
+      this.activities = [];
+      this.currentActivity = null;
+      this.totalTime = 0;
+      this.closed = false;
+      this.info = new SequenceRegInfo(this);
     }
 
     /**
@@ -64,9 +63,9 @@ define([
       const result = {
         sequence: this.name,
         activities: []
-      }
-      this.activities.forEach(act => result.activities.push(act.getData()))
-      return result
+      };
+      this.activities.forEach(act => result.activities.push(act.getData()));
+      return result;
     }
 
     /**
@@ -74,7 +73,7 @@ define([
      * @returns {SequenceRegInfo}
      */
     getInfo() {
-      return this.info.recalc()
+      return this.info.recalc();
     }
 
     /**
@@ -83,9 +82,9 @@ define([
     endSequence() {
       if (this.currentActivity && this.activities.length > 0) {
         if (!this.currentActivity.closed)
-          this.currentActivity.closeActivity()
-        this.totalTime = this.currentActivity.startTime + this.currentActivity.totalTime - this.activities[0].startTime
-        this.info.valid = false
+          this.currentActivity.closeActivity();
+        this.totalTime = this.currentActivity.startTime + this.currentActivity.totalTime - this.activities[0].startTime;
+        this.info.valid = false;
       }
     }
 
@@ -95,9 +94,9 @@ define([
      */
     newActivity(act) {
       if (!this.closed) {
-        this.currentActivity = new ActivityReg(act)
-        this.activities.push(this.currentActivity)
-        this.info.valid = false
+        this.currentActivity = new ActivityReg(act);
+        this.activities.push(this.currentActivity);
+        this.info.valid = false;
       }
     }
 
@@ -110,8 +109,8 @@ define([
      */
     endActivity(score, numActions, solved) {
       if (this.currentActivity) {
-        this.currentActivity.endActivity(score, numActions, solved)
-        this.info.valid = false
+        this.currentActivity.endActivity(score, numActions, solved);
+        this.info.valid = false;
       }
     }
 
@@ -124,8 +123,8 @@ define([
      */
     newAction(type, source, dest, ok) {
       if (this.currentActivity) {
-        this.currentActivity.newAction(type, source, dest, ok)
-        this.info.valid = false
+        this.currentActivity.newAction(type, source, dest, ok);
+        this.info.valid = false;
       }
     }
   }
@@ -166,7 +165,7 @@ define([
      * @name SequenceReg#info
      * @type {SequenceRegInfo} */
     info: null,
-  })
+  });
 
   /**
    * This object stores the global results of a {@link SequenceReg}
@@ -178,16 +177,16 @@ define([
      * @param {SequenceReg} sqReg - The {@link SequenceReg} associated tho this `Info` object.
      */
     constructor(sqReg) {
-      this.sqReg = sqReg
+      this.sqReg = sqReg;
     }
 
     /**
      * Clears all global data associated with this sequence
      */
     clear() {
-      this.nActivities = this.nActClosed = this.nActSolved = this.nActScore = 0
-      this.ratioSolved = this.nActions = this.tScore = this.tTime = 0
-      this.valid = false
+      this.nActivities = this.nActClosed = this.nActSolved = this.nActScore = 0;
+      this.ratioSolved = this.nActions = this.tScore = this.tTime = 0;
+      this.valid = false;
     }
 
     /**
@@ -196,31 +195,31 @@ define([
      */
     recalc() {
       if (!this.valid) {
-        this.clear()
-        this.nActivities = this.sqReg.activities.length
+        this.clear();
+        this.nActivities = this.sqReg.activities.length;
         if (this.nActivities > 0) {
           this.sqReg.activities.forEach(ar => {
             if (ar.closed) {
-              this.nActClosed++
-              this.tTime += ar.totalTime
-              this.nActions += ar.numActions
+              this.nActClosed++;
+              this.tTime += ar.totalTime;
+              this.nActions += ar.numActions;
               if (ar.solved)
-                this.nActSolved++
-              const r = ar.getPrecision()
+                this.nActSolved++;
+              const r = ar.getPrecision();
               if (r >= 0) {
-                this.tScore += r
-                this.nActScore++
+                this.tScore += r;
+                this.nActScore++;
               }
             }
-          })
+          });
           if (this.nActClosed > 0)
-            this.ratioSolved = this.nActSolved / this.nActClosed
+            this.ratioSolved = this.nActSolved / this.nActClosed;
           if (this.nActScore > 0)
-            this.tScore = Math.round(this.tScore / this.nActScore)
+            this.tScore = Math.round(this.tScore / this.nActScore);
         }
-        this.valid = true
+        this.valid = true;
       }
-      return this
+      return this;
     }
   }
 
@@ -275,9 +274,9 @@ define([
      * @name SequenceRegInfo#tTime
      * @type {number} */
     tTime: 0,
-  })
+  });
 
-  SequenceReg.Info = SequenceRegInfo
+  SequenceReg.Info = SequenceRegInfo;
 
-  return SequenceReg
-})
+  return SequenceReg;
+});

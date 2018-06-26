@@ -242,15 +242,19 @@ define([
                   userSelect.addEventListener('change', ev => { sel = ev.target.selectedIndex });
                   this.ps.skin.showDlg(true, {
                     main: [
-                      $('<h2/>', { class: 'subtitle' }).html(this.ps.getMsg('Select user:')),
-                      $userSelect,
-                      $('<h2/>', { class: 'subtitle' }).html(this.ps.getMsg('Password:')).append($pwdInput)],
+                      html.element('h2', this.ps.getMsg('Select user:'), 'subtitle'),
+                      userSelect,
+                      html.append(
+                        html.element('h2', this.ps.getMsg('Password:'), 'subtitle'),
+                        pwdInput),
+                    ],
                     bottom: [
-                      this.ps.skin.$okDlgBtn,
-                      this.ps.skin.$cancelDlgBtn]
+                      this.ps.skin.okDlgBtn,
+                      this.ps.skin.cancelDlgBtn,
+                    ]
                   }).then(() => {
                     if (sel >= 0) {
-                      if (userList[sel].pwd && Encryption.Decrypt(userList[sel].pwd) !== $pwdInput.val()) {
+                      if (userList[sel].pwd && Encryption.Decrypt(userList[sel].pwd) !== pwdInput.getAttribute('value')) {
                         window.alert(this.ps.getMsg('Incorrect password'));
                         reject('Incorrect password');
                       } else {
@@ -264,20 +268,25 @@ define([
               }).catch(reject);
             }).catch(reject);
           } else {
-            const $userInput = $('<input/>', { type: 'text', size: 8, maxlength: 64 });
+            const userInput = html.element('input', null, null, null, { type: 'text', size: 8, maxlength: 64 });
             this.ps.skin.showDlg(true, {
               main: [
-                $('<div/>').css({ 'text-align': 'right' })
-                  .append($('<h2/>', { class: 'subtitle' }).html(this.ps.getMsg('User:'))
-                    .append($userInput))
-                  .append($('<h2/>', { class: 'subtitle' }).html(this.ps.getMsg('Password:'))
-                    .append($pwdInput))],
+                html.append(
+                  html.div(null, null, { 'text-align': 'right' }),
+                  html.append(
+                    html.element('h2', this.ps.getMsg('User:'), 'subtitle'),
+                    userInput),
+                  html.append(
+                    html.element('h2', this.ps.getMsg('Password:'), 'subtitle'),
+                    pwdInput)),
+              ],
               bottom: [
-                this.ps.skin.$okDlgBtn,
-                this.ps.skin.$cancelDlgBtn]
+                this.ps.skin.okDlgBtn,
+                this.ps.skin.cancelDlgBtn,
+              ]
             }).then(() => {
-              this.getUserData($userInput.val()).then(user => {
-                if (user.pwd && Encryption.Decrypt(user.pwd) !== $pwdInput.val()) {
+              this.getUserData(userInput.getAttribute('value')).then(user => {
+                if (user.pwd && Encryption.Decrypt(user.pwd) !== pwdInput.getAttribute('value')) {
                   window.alert(this.ps.getMsg('Incorrect password'));
                   reject('Incorrect password');
                 } else {

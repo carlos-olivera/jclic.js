@@ -31,9 +31,8 @@
 /* global define */
 
 define([
-  "jquery",
   "../Utils"
-], function ($, Utils) {
+], function (Utils) {
 
   /**
    * This class stores information about one specific action done by the current user while playing
@@ -51,49 +50,49 @@ define([
      * @param {boolean} ok - `true` if the action was OK, `false`, `null` or `undefined` otherwise
      */
     constructor(type, source, dest, ok) {
-      this.type = type
-      this.source = source || null
-      this.dest = dest || null
-      this.ok = ok || false
-      this.time = (new Date()).valueOf()
+      this.type = type;
+      this.source = source || null;
+      this.dest = dest || null;
+      this.ok = ok || false;
+      this.time = (new Date()).valueOf();
     }
 
     /**
      * Provides the data associated with this action in XML format suitable for a
      * {@link http://clic.xtec.cat/en/jclic/reports/|JClic Reports Server}.
-     * @returns {external:jQuery}
+     * @returns {external:Element}
      */
-    $getXML() {
-      const attr = { ok: this.ok, time: this.time }
+    getXML() {
+      const attr = { ok: this.ok, time: this.time };
       if (this.type)
-        attr.type = this.type
+        attr.type = this.type;
       if (this.source)
-        attr.source = this.source
+        attr.source = this.source;
       if (this.dest)
-        attr.dest = this.dest
-      return $('<action/>', attr)
+        attr.dest = this.dest;
+      return Utils.HTML.element('action', null, null, null, attr);
     }
 
     /**
      * Fills this ActionReg with data provided in XML format
-     * @param {external:jQuery} $xml - The XML element to be processed, already wrapped as jQuery object
+     * @param {external:Element} xml - The XML element to be processed
      */
-    setProperties($xml) {
-      Utils.attrForEach($xml.get(0).attributes, (name, value) => {
+    setProperties(xml) {
+      Utils.attrForEach(xml.attributes, (name, value) => {
         switch (name) {
           case 'type':
           case 'source':
           case 'dest':
-            this[name] = value
-            break
+            this[name] = value;
+            break;
           case 'time':
-            this[name] = Number(value)
-            break
+            this[name] = Number(value);
+            break;
           case 'ok':
-            this[name] = Utils.getBoolean(value, false)
-            break
+            this[name] = Utils.getBoolean(value, false);
+            break;
         }
-      })
+      });
     }
   }
 
@@ -123,7 +122,7 @@ define([
      * @name ActionReg#isOk
      * @type {boolean} */
     isOk: false,
-  })
+  });
 
-  return ActionReg
-})
+  return ActionReg;
+});
