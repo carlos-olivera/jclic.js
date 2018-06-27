@@ -31,11 +31,10 @@
 /* global define, document */
 
 define([
-  "jquery",
   "./Reporter",
   "../Utils"
 ], function (
-  $, Reporter, Utils) {
+  Reporter, Utils) {
 
     /**
      * This special case of {@link Reporter} connects with an external service reporter providing
@@ -52,8 +51,8 @@ define([
        * @param {PlayStation} ps - The {@link PlayStation} used to retrieve settings and localized messages
        */
       constructor(ps) {
-        super(ps)
-        this.tasks = []
+        super(ps);
+        this.tasks = [];
       }
 
       /**
@@ -66,7 +65,7 @@ define([
       getProperty(key, defaultValue) {
         return this.dbProperties !== null && this.dbProperties.hasOwnProperty(key) ?
           this.dbProperties[key] :
-          defaultValue
+          defaultValue;
       }
 
       /**
@@ -76,11 +75,11 @@ define([
       addTask(bean) {
         if (this.processingTasks) {
           if (this.waitingTasks === null)
-            this.waitingTasks = [bean]
+            this.waitingTasks = [bean];
           else
-            this.waitingTasks.push(bean)
+            this.waitingTasks.push(bean);
         } else
-          this.tasks.push(bean)
+          this.tasks.push(bean);
       }
 
       /**
@@ -92,55 +91,66 @@ define([
           this.tasks.length === 0 || this.serviceUrl === null) {
           // The task list cannot be processed now. Pass and wait until the next timer cycle:
           if (this.processingTasks)
-            this.forceFlush = true
-          return Promise.resolve(true)
+            this.forceFlush = true;
+          return Promise.resolve(true);
         }
         else {
           // Set up the `processingTasks` flag to avoid re-entrant processing
-          this.processingTasks = true
+          this.processingTasks = true;
 
-          const reportBean = new ReportBean('multiple')
+          const reportBean = new ReportBean('multiple');
           for (let i = 0; i < this.tasks.length; i++)
-            reportBean.appendData(this.tasks[i].$bean)
+            reportBean.appendData(this.tasks[i].xml);
 
-          Utils.log('debug', 'Reporting:', reportBean.$bean[0])
+          Utils.log('debug', 'Reporting:', reportBean.xml);
 
-          return new Promise((resolve, reject) => {
-            this.transaction(reportBean.$bean)
-              .done((_data, _textStatus, _jqXHR) => {
-                // TODO: Check returned message for possible errors on the server side
-                this.failCount = 0
+          return this.transaction(reportBean)
+            .then(_data => {
+              this.failCount = 0;
 
-                // Clear waiting tasks
-                if (this.waitingTasks) {
-                  this.tasks = this.waitingTasks
-                  this.waitingTasks = null
-                }
-                else {
-                  this.forceFlush = false
-                  this.tasks = []
-                }
+              // Clear waiting tasks
+              if (this.waitingTasks) {
+                this.tasks = this.waitingTasks;
+                this.waitingTasks = null;
+              }
+              else {
+                this.forceFlush = false;
+                this.tasks = [];
+              }
 
-                if (this.forceFlush && this.tasks.length > 0) {
-                  this.forceFlush = false
-                  this.processingTasks = false
-                  this.flushTasksPromise().then(() => {
-                    resolve(true)
-                  })
-                }
-                else {
-                  this.forceFlush = false
-                  resolve(true)
-                  this.processingTasks = false
-                }
-              })
-              .fail((jqXHR, textStatus, errorThrown) => {
-                if (++this.failCount > this.maxFails)
-                  this.stopReporting().then()
-                reject(`Error reporting results to ${this.serviceUrl} [${textStatus} ${errorThrown}]`)
-                this.processingTasks = false
-              })
-          })
+              if (this.forceFlush && this.tasks.length > 0) {
+                this.forceFlush = false;
+                this.processingTasks = false;
+                return this.flushTasksPromise();
+              }
+
+              this.forceFlush = false;
+              this.processingTasks = false;
+              return true;
+            })
+            .catch(err => {
+              if (++this.failCount > this.maxFails)
+                this.stopReporting();
+              this.processingTasks = false;
+              throw `Error reporting results to ${this.serviceUrl} [${err}]`;
+            });
+        }
+      }
+
+      /**
+       * Function used as a handler for the `beforeunload` event.
+       * See: https://developer.mozilla.org/en-US/docs/Web/Events/beforeunload
+       * Warns before leaving the current page with unsaved data.
+       * @param {external:Event} event 
+       */
+      beforeUnloadFunction(event) {
+        if (this.serviceUrl !== null &&
+          (this.tasks.length > 0 || this.processingTasks)) {
+          const result = this.ps.getMsg('Please wait until the results of your activities are sent to the reports system');
+          if (event)
+            event.returnValue = result;
+          this.flushTasksPromise();
+          return result;
         }
       }
 
@@ -153,57 +163,44 @@ define([
        */
       init(options) {
         if (typeof options === 'undefined' || options === null)
-          options = this.ps.options
-        super.init(options)
-        this.initiated = false
-        this.stopReporting()
+          options = this.ps.options;
 
-        this.serverPath = options.path || this.DEFAULT_SERVER_PATH
-        this.descriptionDetail = this.serverPath
-        let serverService = options.service || this.DEFAULT_SERVER_SERVICE
-        if (!Utils.startsWith(serverService, '/'))
-          serverService = `/${serverService}`
-        const serverProtocol = options.protocol || this.DEFAULT_SERVER_PROTOCOL
-        this.serviceUrl = `${serverProtocol}://${this.serverPath}${serverService}`
-
-        const bean = new ReportBean('get_properties')
-        return new Promise((resolve, reject) => {
-          this.transaction(bean.$bean)
-            .done((data, _textStatus, _jqXHR) => {
-              this.dbProperties = {}
-              $(data).find('param').each((_n, param) => {
-                const $param = $(param)
-                this.dbProperties[$param.attr('name')] = $param.attr('value')
-              })
-              this.promptUserId(false).then(userId => {
-                this.userId = userId
-                const tl = options.lap || this.getProperty('TIME_LAP', this.DEFAULT_TIMER_LAP)
-                this.timerLap = Math.min(30, Math.max(1, parseInt(tl)))
-                this.timer = window.setInterval(() => this.flushTasksPromise().then(), this.timerLap * 1000)
-                // Warn before leaving the current page with unsaved data:
-                this.beforeUnloadFunction = event => {
-                  if (this.serviceUrl !== null &&
-                    (this.tasks.length > 0 || this.processingTasks)) {
-                    this.flushTasksPromise().then()
-                    const result = this.ps.getMsg('Please wait until the results of your activities are sent to the reports system')
-                    if (event)
-                      event.returnValue = result
-                    return result
-                  }
-                }
-                window.addEventListener('beforeunload', this.beforeUnloadFunction)
-                this.initiated = true
-                resolve(true)
-              }).catch(msg => {
-                this.stopReporting()
-                reject(`Error getting the user ID: ${msg}`)
-              })
-            })
-            .fail((jqXHR, textStatus, errorThrown) => {
-              this.stopReporting()
-              reject(`Error initializing reports service ${this.serviceUrl} [${textStatus} ${errorThrown}]`)
-            })
-        })
+        return super.init(options)
+          .then(_result => {
+            this.initiated = false;
+            return this.stopReporting();
+          })
+          .then(_result => {
+            this.serverPath = options.path || this.DEFAULT_SERVER_PATH;
+            this.descriptionDetail = this.serverPath;
+            let serverService = options.service || this.DEFAULT_SERVER_SERVICE;
+            if (!Utils.startsWith(serverService, '/'))
+              serverService = `/${serverService}`;
+            const serverProtocol = options.protocol || this.DEFAULT_SERVER_PROTOCOL;
+            this.serviceUrl = `${serverProtocol}://${this.serverPath}${serverService}`;
+            return this.transaction(new ReportBean('get_properties'));
+          })
+          .then(data => {
+            this.dbProperties = {};
+            data.querySelectorAll('param').forEach(param => this.dbProperties[param.getAttribute('name')] = param.getAttribute('value'));
+            return true;
+          })
+          .then(_result => this.promptUserId(false))
+          .then(userId => {
+            // Save userId and make final adjustements:
+            this.userId = userId;
+            const tl = options.lap || this.getProperty('TIME_LAP', this.DEFAULT_TIMER_LAP);
+            this.timerLap = Math.min(30, Math.max(1, parseInt(tl)));
+            this.timer = window.setInterval(() => this.flushTasksPromise(), this.timerLap * 1000);
+            window.addEventListener('beforeunload', this.beforeUnloadFunction);
+            this.beforeUnloadHandler = true;
+            this.initiated = true;
+            return true;
+          })
+          .catch(err => {
+            this.stopReporting();
+            throw `Error initializing reports service ${this.serviceUrl} [${err}]`;
+          });
       }
 
       /**
@@ -212,10 +209,10 @@ define([
        * @param {JClicProject} jcp - The {@link JClicProject} this session refers to.
        */
       newSession(jcp) {
-        super.newSession(jcp)
+        super.newSession(jcp);
         if (this.serviceUrl && this.userId !== null) {
           // Session ID will be obtained when reporting first activity
-          this.currentSessionId = null
+          this.currentSessionId = null;
         }
       }
 
@@ -223,41 +220,40 @@ define([
        * Creates a new session in the remote database and records its ID for future use
        * @param {boolean} forceNewSession - When `true`, a new session will always be created.
        * @returns {Promise} - A Promise reporter will be successfully resolved
-       * only when `currentSessionId` have a valid value.
+       * only when `currentSessionId` has a valid value.
        */
       createDBSession(forceNewSession) {
         if (this.currentSessionId !== null && !forceNewSession)
           // A valid session is available, so just return it
-          return Promise.resolve(this.currentSessionId)
+          return Promise.resolve(this.currentSessionId);
+        else if (!this.initiated || this.userId === null || this.currentSession === null)
+          return Promise.reject('Unable to start session in remote server!');
         else
-          // A new session must be created:
-          return new Promise((resolve, reject) => {
-            if (this.initiated && this.userId !== null && this.currentSession !== null) {
-              this.flushTasksPromise().then(() => {
-                this.currentSessionId = null
-                const bean = new ReportBean('add session')
-
-                bean.setParam('project', this.currentSession.projectName)
-                bean.setParam('activities', Number(this.currentSession.reportableActs))
-                bean.setParam('time', Number(this.currentSession.started))
-                bean.setParam('code', this.currentSession.code)
-                bean.setParam('user', this.userId)
-                bean.setParam('key', this.sessionKey)
-                bean.setParam('context', this.sessionContext)
-
-                this.transaction(bean.$bean)
-                  .done((data, _textStatus, _jqXHR) => {
-                    this.currentSessionId = $(data).find('param[name="session"]').attr('value')
-                    resolve(this.currentSessionId)
-                  })
-                  .fail((jqXHR, textStatus, errorThrown) => {
-                    this.stopReporting()
-                    reject(`Error creating new reports session in ${this.serviceUrl} [${textStatus} ${errorThrown}]`)
-                  })
-              })
-            } else
-              reject('Unable to start session in remote server!')
-          })
+          return this.flushTasksPromise()
+            .then(_result => {
+              this.currentSessionId = null;
+              const bean = new ReportBean('add session');
+              bean.setParam('project', this.currentSession.projectName);
+              bean.setParam('activities', Number(this.currentSession.reportableActs));
+              bean.setParam('time', Number(this.currentSession.started));
+              bean.setParam('code', this.currentSession.code);
+              bean.setParam('user', this.userId);
+              bean.setParam('key', this.sessionKey);
+              bean.setParam('context', this.sessionContext);
+              return this.transaction(bean);
+            })
+            .then(data => {
+              const sessionParam = data ? data.querySelector('param[name="session"]') : null;
+              if (sessionParam)
+                this.currentSessionId = sessionParam.getAttribute('value');
+              if (this.currentSessionId === null)
+                throw 'No session ID!';
+              return this.currentSessionId;
+            })
+            .catch(err => {
+              this.stopReporting();
+              throw `Error creating new reports session in ${this.serviceUrl} [${err}]`;
+            });
       }
 
       /**
@@ -266,55 +262,62 @@ define([
        * @returns {Promise} - A promise to be fullfilled when all pending tasks are finished, or _null_ if not active.
        */
       end() {
-        this.reportActivity(true)
-        return this.stopReporting().then(super.end())
+        this.reportActivity(true);
+        return this.stopReporting()
+          .then(_result => super.end());
       }
 
       /**
        * Performs a transaction on the remote server
-       * @param {external:jQuery} $xml - The XML element to be transmited, wrapped into a jQuery object
-       * @returns {external:jqXHR} - The {@link external:jqXHR} obtained as a result of a call to `$.ajax`.
-       * This object should be treated as a Promise or
-       * as a JQuery {@link https://api.jquery.com/category/deferred-object|Deferred} object.
+       * @param {ReportBean} bean - The Reportbean containing the XML element to be transmited
+       * @returns {external:Promise} - A Promise that resolves with an XML Element
        */
-      transaction($xml) {
-        return this.serviceUrl === null ?
-          null :
-          $.ajax({
-            method: 'POST',
-            url: this.serviceUrl,
-            data: '<?xml version="1.0" encoding="UTF-8"?>' +
-              (new XMLSerializer()).serializeToString($xml.get(0)).replace('minactions', 'minActions').replace('reportactions', 'reportActions'),
-            contentType: 'text/xml',
-            dataType: 'xml'
-          })
+      transaction(bean) {
+        if (!this.serviceUrl)
+          return Promise.reject('A valid URL for the reports server was not provided!');
+
+        return fetch(this.serviceUrl, {
+          method: 'POST',
+          body: `<?xml version="1.0" encoding="UTF-8"?>${Utils.serializer.serializeToString(bean.xml).replace(/minactions/g, 'minActions').replace(/reportactions/g, 'reportActions')}`,
+          mode: 'cors',
+          credentials: 'include',
+          headers: {
+            'Accept': 'text/xml',
+            'Content-Type': 'text/xml',
+          }
+        })
+          .then(response => response.text()
+            .then(text => {
+              if (!response.ok)
+                throw `Server error ${response.status}: ${text}`;
+              return Utils.parseXmlText(text);
+            })
+          );
       }
 
       /**
        * Gets the list of current groups or organizations registered on this reporting system.
        * @override
-       * @returns {Promise} - When fulfilled, an array of group data is returned as a result
+       * @returns {Promise} - Resolves to an array of group data
        */
       getGroups() {
-        return new Promise((resolve, reject) => {
-          if (!this.userBased())
-            reject('This system does not manage users!')
-          else {
-            const bean = new ReportBean('get groups')
-            this.transaction(bean.$bean)
-              .done((data, _textStatus, _jqXHR) => {
-                const currentGroups = []
-                $(data).find('group').each((_n, gr) => {
-                  const $group = $(gr)
-                  currentGroups.push({ id: $group.attr('id'), name: $group.attr('name') })
-                })
-                resolve(currentGroups)
-              })
-              .fail((jqXHR, textStatus, errorThrown) => {
-                reject(`Error retrieving groups list from ${this.serviceUrl} [${textStatus} ${errorThrown}]`)
-              })
-          }
-        })
+        if (!this.userBased())
+          return Promise.reject('This system does not manage users!');
+
+        return this.transaction(new ReportBean('get groups'))
+          .then(data => {
+            const currentGroups = [];
+            data.querySelectorAll('group').forEach(gr => {
+              currentGroups.push({
+                id: gr.getAttribute('id'),
+                name: gr.getAttribute('name'),
+              });
+            });
+            return currentGroups;
+          })
+          .catch(err => {
+            throw `Error retrieving groups list from ${this.serviceUrl} [${err}]`;
+          });
       }
 
       /**
@@ -326,30 +329,30 @@ define([
        * is returned
        */
       getUsers(groupId) {
-        return new Promise((resolve, reject) => {
-          if (!this.userBased())
-            reject('This system does not manage users!')
-          else {
-            const bean = new ReportBean('get users')
-            if (typeof groupId !== 'undefined' && groupId !== null)
-              bean.setParam('group', groupId)
-            this.transaction(bean.$bean)
-              .done((data, _textStatus, _jqXHR) => {
-                const currentUsers = []
-                $(data).find('user').each((_n, usr) => {
-                  const $user = $(usr)
-                  const user = { id: $user.attr('id'), name: $user.attr('name') }
-                  if ($user.attr('pwd'))
-                    user.pwd = $user.attr('pwd')
-                  currentUsers.push(user)
-                })
-                resolve(currentUsers)
-              })
-              .fail((jqXHR, textStatus, errorThrown) => {
-                reject(`Error retrieving users list from ${this.serviceUrl} [${textStatus} ${errorThrown}]`)
-              })
-          }
-        })
+        if (!this.userBased())
+          return Promise.reject('This system does not manage users!');
+
+        const bean = new ReportBean('get users');
+        if (typeof groupId !== 'undefined' && groupId !== null)
+          bean.setParam('group', groupId);
+
+        return this.transaction(bean)
+          .then(data => {
+            const currentUsers = [];
+            data.querySelectorAll('user').forEach(usr => {
+              const user = {
+                id: usr.getAttribute('id'),
+                name: usr.getAttribute('name'),
+              };
+              if (usr.getAttribute('pwd'))
+                user.pwd = usr.getAttribute('pwd');
+              currentUsers.push(user);
+            });
+            return currentUsers;
+          })
+          .catch(err => {
+            throw `Error retrieving users list from ${this.serviceUrl} [${err}]`;
+          });
       }
 
       /**
@@ -358,35 +361,32 @@ define([
        * @returns {Promise} - When fulfilled, an object with user data is returned.
        */
       getUserData(userId) {
-        return new Promise((resolve, reject) => {
-          if (!this.userBased())
-            reject('This system does not manage users!')
-          else {
-            const bean = new ReportBean('get user data')
+        if (!this.userBased())
+          return Promise.reject('This system does not manage users!');
+        if (typeof userId === 'undefined' || userId === null || userId === '')
+          return Promise.reject(`Invalid user ID: "${userId}"`);
 
-            if (typeof userId !== 'undefined' && userId !== null)
-              bean.setParam('user', userId)
-            else
-              reject('Invalid user ID')
-
-            this.transaction(bean.$bean)
-              .done((data, _textStatus, _jqXHR) => {
-                const $user = $(data).find('user')
-                if ($user.length !== 1) {
-                  alert(this.ps.getMsg('Invalid user'))
-                  resolve('Invalid user ID')
-                } else {
-                  const user = { id: $user.attr('id'), name: $user.attr('name') }
-                  if ($user.attr('pwd'))
-                    user.pwd = $user.attr('pwd')
-                  resolve(user)
-                }
-              })
-              .fail((jqXHR, textStatus, errorThrown) => {
-                reject(`Error retrieving user data from ${this.serviceUrl} [${textStatus} ${errorThrown}]`)
-              })
-          }
-        })
+        const bean = new ReportBean('get user data');
+        bean.setParam('user', userId);
+        return this.transaction(bean)
+          .then(data => {
+            const user = data.querySelector('user');
+            if (!user) {
+              alert(this.ps.getMsg('Invalid user!'));
+              throw 'Invalid user ID';
+            } else {
+              const userData = {
+                id: user.getAttribute('id'),
+                name: user.getAttribute('name'),
+              };
+              if (user.getAttribute('pwd'))
+                userData.pwd = user.getAttribute('pwd');
+              return userData;
+            }
+          })
+          .catch(err => {
+            throw `Error retrieving user data from ${this.serviceUrl} [${err}]`;
+          });
       }
 
       /**
@@ -395,23 +395,24 @@ define([
        * @returns {Promise} - A promise to be fullfilled when all pending tasks are finished.
        */
       stopReporting() {
-        let result = null
+        let result = null;
         if (this.timer >= 0) {
-          window.clearInterval(this.timer)
-          this.timer = -1
+          window.clearInterval(this.timer);
+          this.timer = -1;
         }
-        if (this.beforeUnloadFunction) {
-          window.removeEventListener('beforeunload', this.beforeUnloadFunction)
-          this.beforeUnloadFunction = null
+        if (this.beforeUnloadHandler) {
+          window.removeEventListener('beforeunload', this.beforeUnloadFunction);
+          this.beforeUnloadHandler = false;
         }
         if (this.initiated) {
-          result = this.flushTasksPromise().then(() => {
-            this.serviceUrl = null
-            this.descriptionDetail = `${this.serverPath} (${this.ps.getMsg('not connected')})`
-            this.initiated = false
-          })
+          result = this.flushTasksPromise()
+            .then(() => {
+              this.serviceUrl = null;
+              this.descriptionDetail = `${this.serverPath} (${this.ps.getMsg('not connected')})`;
+              this.initiated = false;
+            });
         }
-        return result || Promise.resolve(true)
+        return result || Promise.resolve(true);
       }
 
       /**
@@ -422,26 +423,26 @@ define([
       reportActivity(flushNow) {
         if (this.lastActivity) {
           if (!this.lastActivity.closed)
-            this.lastActivity.closeActivity()
+            this.lastActivity.closeActivity();
           const
             actCount = this.actCount++,
-            act = this.lastActivity
+            act = this.lastActivity;
           this.createDBSession(false).then(() => {
-            const bean = new ReportBean('add activity')
-            bean.setParam('session', this.currentSessionId)
-            bean.setParam('num', actCount)
-            bean.appendData(act.$getXML())
-            this.addTask(bean)
+            const bean = new ReportBean('add activity');
+            bean.setParam('session', this.currentSessionId);
+            bean.setParam('num', actCount);
+            bean.appendData(act.getXML());
+            this.addTask(bean);
             if (flushNow)
-              this.flushTasksPromise().then()
-          })
+              this.flushTasksPromise().then();
+          });
         }
         if (this.currentSession !== null &&
           this.currentSession.currentSequence !== null &&
           this.currentSession.currentSequence.currentActivity !== this.lastActivity) {
-          this.lastActivity = this.currentSession.currentSequence.currentActivity
+          this.lastActivity = this.currentSession.currentSequence.currentActivity;
         } else
-          this.lastActivity = null
+          this.lastActivity = null;
       }
 
       /**
@@ -450,8 +451,8 @@ define([
        * @param {Activity} act - The {@link Activity} reporter has just started
        */
       newActivity(act) {
-        super.newActivity(act)
-        this.reportActivity(false)
+        super.newActivity(act);
+        this.reportActivity(false);
       }
 
       /**
@@ -463,8 +464,8 @@ define([
        * @param {boolean} solved - `true` if the activity was finally solved, `false` otherwise.
        */
       endActivity(score, numActions, solved) {
-        super.endActivity(score, numActions, solved)
-        this.reportActivity(true)
+        super.endActivity(score, numActions, solved);
+        this.reportActivity(true);
       }
     }
 
@@ -487,10 +488,10 @@ define([
        * @type {string} */
       serverPath: '',
       /**
-       * Function to be called by the browser before leaving the current page
-       * @name TCPReporter#beforeUnloadFunction
-       * @type {function} */
-      beforeUnloadFunction: null,
+       * Checks if the 'beforeunload' event is already linked to this reporter
+       * @name TCPReporter#beforeUnloadHandler
+       * @type {boolean} */
+      beforeUnloadHandler: false,
       /**
        * Identifier of the current session, provided by the server
        * @name TCPReporter#currentSessionId
@@ -577,7 +578,7 @@ define([
        * @name TCPReporter#DEFAULT_TIMER_LAP
        * @type {number} */
       DEFAULT_TIMER_LAP: 20,
-    })
+    });
 
 
     /**
@@ -591,21 +592,22 @@ define([
        * @param id {string} - The main identifier of this ReportBean. Current valid values are:
        * `get property`, `get_properties`, `add session`, `add activity`, `get groups`, `get users`,
        * `get user data`, `get group data`, `new group`, `new user` and `multiple`.
-       * @param $data {external:jQuery}+ - Optional XML data to be added to this bean
+       * @param data {external:Element}+ - Optional XML data to be added to this bean
        */
-      constructor(id, $data) {
-        this.$bean = $('<bean/>').attr({ id: id })
-        if ($data)
-          this.appendData($data)
+      constructor(id, data) {
+        this.xml = document.createElement('bean');
+        this.xml.setAttribute('id', id);
+        if (data)
+          this.appendData(data);
       }
 
       /**
-       * Adds  an XML element to the bean
-       * @param {external:jQuery} $data - The XML element to be added to this bean
+       * Adds an XML element to the bean
+       * @param {external:Element} data - The XML element to be added to this bean
        */
-      appendData($data) {
-        if ($data) {
-          this.$bean.append($data)
+      appendData(data) {
+        if (data) {
+          this.xml.appendChild(data);
         }
       }
 
@@ -615,23 +617,27 @@ define([
        * @param {string|number|boolean} value - The value of the parameter
        */
       setParam(name, value) {
-        if (typeof value !== 'undefined' && value !== null)
-          this.appendData($('<param/>').attr({ name: name, value: value }))
+        if (typeof value !== 'undefined' && value !== null) {
+          const child = document.createElement('param');
+          child.setAttribute('name', name);
+          child.setAttribute('value', value);
+          this.appendData(child);
+        }
       }
     }
 
     Object.assign(ReportBean.prototype, {
       /**
-       * The main jQuery XML object managed by this ReportBean
-       * @name ReportBean#$bean
-       * @type {external:jQuery} */
-      $bean: null,
-    })
+       * The main XML element managed by this ReportBean
+       * @name ReportBean#xml
+       * @type {external:Element} */
+      xml: null,
+    });
 
-    TCPReporter.ReportBean = ReportBean
+    TCPReporter.ReportBean = ReportBean;
 
     // Register class in Reporter.CLASSES
-    Reporter.CLASSES['TCPReporter'] = TCPReporter
+    Reporter.CLASSES['TCPReporter'] = TCPReporter;
 
-    return TCPReporter
-  })
+    return TCPReporter;
+  });

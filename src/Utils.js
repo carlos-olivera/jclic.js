@@ -259,6 +259,38 @@ define([
     }
 
     /**
+     * Builds a [DOMParser](https://developer.mozilla.org/en-US/docs/Web/API/DOMParser) object, useful for converting
+     * xml strings into xml elements.
+     * @returns {external:DOMParser}
+     */
+    static get parser() {
+      if (!Utils._parser)
+        Utils._parser = new DOMParser();
+      return Utils._parser;
+    }
+
+    /**
+     * Parses an XML-formatted string, returning an XML Element
+     * Warning: This method does not check the XML validity of the provided text. In case of error, an element of type `html` is returned.
+     * @param {string} xmlText - The text to parse
+     * @returns {external:Element}
+     */
+    static parseXmlText(xmlText) {
+      return Utils.parser.parseFromString(xmlText, 'text/xml').firstChild;
+    }
+
+    /**
+     * Builds a [XMLSerializer](https://developer.mozilla.org/en-US/docs/Web/API/XMLSerializer) object, useful for converting
+     * xml elements into strings.
+     * @returns {external:XMLSerializer}
+     */
+    static get serializer() {
+      if (!Utils._serializer)
+        Utils._serializer = new XMLSerializer();
+      return Utils._serializer;
+    }
+
+    /**
      * Reads paragraphs, identified by `<p></p>` elements, inside XML data
      * @param {object} xml - The DOM-XML element to be parsed
      * @returns {string}
