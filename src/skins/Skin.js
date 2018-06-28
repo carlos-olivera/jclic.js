@@ -95,9 +95,11 @@ define([
       // Add waiting panel and progress bar
       this.progress = html.element('progress', null, 'progressBar', { display: 'none' });
       this.waitPanel = html.append(html.div(null, null, { display: 'none', 'background-color': 'rgba(255, 255, 255, .60)', 'z-index': 99 }),
-        html.append(html.div(null, 'waitPanel', { display: 'flex', 'flex-direction': 'column' },
+        html.append(html.div(null, 'waitPanel', { display: 'flex', 'flex-direction': 'column' }),
           html.div(`${this.waitImgBig}${this.waitImgSmall}`, 'animImgBox'),
-          this.progress)));
+          this.progress
+        )
+      );
 
       html.append(this.playerCnt, this.waitPanel);
 
@@ -150,7 +152,9 @@ define([
         html.append(this.dlgOverlay,
           html.append(dlgDiv,
             this.dlgMainPanel,
-            this.dlgBottomPanel))
+            this.dlgBottomPanel
+          )
+        )
       );
 
       msg = ps.getMsg('JClic logo');
@@ -306,7 +310,8 @@ define([
       if (player !== null && player.skin !== null)
         player.skin.detach();
       this.player = player;
-      this.playerCnt.appendChild(player.$div[0]);
+      this.playerCnt.insertBefore(player.$div[0], this.playerCnt.firstChild)
+      //this.playerCnt.appendChild(player.$div[0]);
       //this.$playerCnt.prepend(player.$div);
       this.setSkinSizes();
       player.$mainContainer.append(this.div);
@@ -533,21 +538,24 @@ define([
             `${started.toLocaleDateString()} ${started.toLocaleTimeString()}`),
           html.doubleCell(
             this.ps.getMsg('Reports system:'),
-            `${this.ps.getMsg(report.descriptionKey)} ${report.descriptionDetail}`));
+            `${this.ps.getMsg(report.descriptionKey)} ${report.descriptionDetail}`)
+        );
         if (report.userId)
           html.append(t, html.doubleCell(
             this.ps.getMsg('User:'),
-            report.userId));
+            report.userId)
+          );
         else if (report.user) // SCORM user
           html.append(t, html.doubleCell(
             this.ps.getMsg('User:'),
-            report.user));
-
+            report.user)
+          );
         if (report.sequences > 0) {
           if (report.sessions.length > 1)
             html.append(t, html.doubleCell(
               this.ps.getMsg('Projects:'),
-              report.sessions.length));
+              report.sessions.length)
+            );
           html.append(t,
             html.doubleCell(
               this.ps.getMsg('Sequences:'),
@@ -557,11 +565,13 @@ define([
               report.activitiesDone),
             html.doubleCell(
               this.ps.getMsg('Activities played at least once:'),
-              `${report.playedOnce}/${report.reportable} (${Utils.getPercent(report.ratioPlayed / 100)})`));
+              `${report.playedOnce}/${report.reportable} (${Utils.getPercent(report.ratioPlayed / 100)})`)
+          );
           if (report.activitiesDone > 0) {
             html.append(t, html.doubleCell(
               this.ps.getMsg('Activities solved:'),
-              `${report.activitiesSolved} (${Utils.getPercent(report.ratioSolved / 100)})`));
+              `${report.activitiesSolved} (${Utils.getPercent(report.ratioSolved / 100)})`)
+            );
             if (report.actScore > 0)
               html.append(t,
                 html.doubleCell(
@@ -569,14 +579,16 @@ define([
                   `${Utils.getPercent(report.partialScore / 100)} ${this.ps.getMsg('(out of played activities)')}`),
                 html.doubleCell(
                   this.ps.getMsg('Global score:'),
-                  `${Utils.getPercent(report.globalScore / 100)} ${this.ps.getMsg('(out of all project activities)')}`));
+                  `${Utils.getPercent(report.globalScore / 100)} ${this.ps.getMsg('(out of all project activities)')}`)
+              );
             html.append(t,
               html.doubleCell(
                 this.ps.getMsg('Total time in activities:'),
                 Utils.getHMStime(report.time * 1000)),
               html.doubleCell(
                 this.ps.getMsg('Actions done:'),
-                report.actions));
+                report.actions)
+            );
           }
           result.push(t);
 
@@ -607,7 +619,8 @@ define([
                       act.solved ? html.td(this.ps.getMsg('YES'), 'ok') : html.td(this.ps.getMsg('NO'), 'no'),
                       html.td(act.actions),
                       html.td(Utils.getPercent(act.precision / 100)),
-                      html.td(Utils.getHMStime(act.time * 1000)));
+                      html.td(Utils.getHMStime(act.time * 1000))
+                    );
                   else {
                     html.append(tr, html.td(act.name, 'incomplete'));
                     for (let r = 0; r < 4; r++)
@@ -625,7 +638,9 @@ define([
                   html.td(`${sr.solved} (${Utils.getPercent(sr.ratioSolved / 100)})`),
                   html.td(sr.actions),
                   html.td(Utils.getPercent(sr.score / 100)),
-                  html.td(Utils.getHMStime(sr.time * 1000))));
+                  html.td(Utils.getHMStime(sr.time * 1000))
+                )
+              );
 
               result.push(t);
             }

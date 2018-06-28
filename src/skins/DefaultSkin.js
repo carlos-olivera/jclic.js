@@ -103,7 +103,7 @@ define([
         if (this.ps)
           this.ps.actions.next.processEvent(evt);
       });
-      this.ctrlCnt.append(this.buttons.next);
+      this.ctrlCnt.appendChild(this.buttons.next);
 
       // Add counters
       if (false !== this.ps.options.counters && false !== options.counters) {
@@ -156,10 +156,9 @@ define([
       // Add `full screen` button
       if (screenfull && screenfull.enabled) {
         msg = ps.getMsg('Toggle full screen');
-        this.buttons.fullscreen = html.append(html.element('button', null,
-          'JClicBtn', null, { title: msg, 'aria-label': msg }),
-          html.element('img', null, null, null,
-            { src: Utils.svgToURI(this.fullScreenIcon, this.iconWidth, this.iconHeight, this.iconFill) }));
+        this.buttons.fullscreen = html.append(html.element('button', null, 'JClicBtn', null, { title: msg, 'aria-label': msg }),
+          html.element('img', null, null, null, { src: Utils.svgToURI(this.fullScreenIcon, this.iconWidth, this.iconHeight, this.iconFill) })
+        );
         this.buttons.fullscreen.addEventListener('click', () => {
           this.setScreenFull(null);
         });

@@ -279,8 +279,8 @@ define([
         return fetch(this.serviceUrl, {
           method: 'POST',
           body: `<?xml version="1.0" encoding="UTF-8"?>${Utils.serializer.serializeToString(bean.xml).replace(/minactions/g, 'minActions').replace(/reportactions/g, 'reportActions')}`,
-          mode: 'cors',
-          credentials: 'include',
+          //mode: 'cors',
+          //credentials: 'include',
           headers: {
             'Accept': 'text/xml',
             'Content-Type': 'text/xml',

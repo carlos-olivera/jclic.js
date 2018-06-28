@@ -261,7 +261,14 @@ define([
     // Search DOM elements with class "JClic" (usually of type 'div') and iterate over them
     // initializing players
     document.querySelectorAll('.JClic').forEach(element => {
-      JClicObject.loadProject(element, element.dataset.project || projectName, Object.assign({}, JClicObject.options, element.dataset.options || {}));
+      let options = {};
+      try {
+        if (element.dataset.options)
+          options = JSON.parse(element.dataset.options);
+      } catch (err) {
+        console.log(`Error parsing JClic options: ${err}\n- Current data-options param is: "${element.dataset.options}"`);
+      }
+      JClicObject.loadProject(element, element.dataset.project || projectName, Object.assign({}, JClicObject.options, options));
     });
   };
 
