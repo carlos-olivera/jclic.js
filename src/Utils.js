@@ -528,20 +528,18 @@ define([
      * @param {string} path - The filename
      * @param {?external:JSZip} zip - An optional {@link external:JSZip} object where to look
      * for the file
-     * @returns {Promise}
+     * @returns {Promise} resolves with a relative path or full URI pointing to the resource 
      */
     static getPathPromise(basePath, path, zip) {
       if (zip) {
         const fName = Utils.getRelativePath(basePath + path, zip.zipBasePath);
-        if (zip.files[fName]) {
-          return new Promise((resolve, reject) => {
-            zip.file(fName).async('base64').then(data => {
+        if (zip.files[fName])
+          return zip.file(fName).async('base64')
+            .then(data => {
               const ext = path.toLowerCase().split('.').pop();
               const mime = Utils.settings.MIME_TYPES[ext] || 'application/octet-stream';
-              resolve(`data:${mime};base64,${data}`);
-            }).catch(reject);
-          });
-        }
+              return `data:${mime};base64,${data}`;
+            });
       }
       return Promise.resolve(Utils.getPath(basePath, path));
     }
