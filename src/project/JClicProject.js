@@ -57,53 +57,52 @@ define([
      * JClicProject constructor
      */
     constructor() {
-      this.settings = new ProjectSettings(this)
-      this.activitySequence = new ActivitySequence(this)
-      this._activities = {}
-      this.mediaBag = new MediaBag(this)
+      this.settings = new ProjectSettings(this);
+      this.activitySequence = new ActivitySequence(this);
+      this._activities = {};
+      this.mediaBag = new MediaBag(this);
     }
 
     /**
-     * Loads the project settings from a main jQuery XML element
-     * @param {external:jQuery} $xml - The XML element
+     * Loads the project settings from a main XML element
+     * @param {external:Element} xml - The XML element
      * @param {string} path - The full path of this project
      * @param {?external:JSZip} zip - An optional JSZip object where this project is encapsulated
      * @param {?object} options - An object with miscellaneous options
      * @returns {JClicProject}
      */
-    setProperties($xml, path, zip, options) {
-      const xml = $xml[0];
+    setProperties(xml, path, zip, options) {
       if (path) {
-        this.path = path
+        this.path = path;
         if (path.file)
-          this.basePath = path
+          this.basePath = path;
         else
-          this.basePath = Utils.getBasePath(path)
+          this.basePath = Utils.getBasePath(path);
       }
-      this.zip = zip
-      this.name = $xml.attr('name')
-      this.version = $xml.attr('version')
-      this.type = $xml.attr('type')
-      this.code = $xml.attr('code')
-      this.settings.setProperties($xml.children('settings'))
-      this.activitySequence.setProperties($xml.children('sequence'))
-      this.mediaBag.setProperties($xml.children('mediaBag'))
-      this.reportableActs = 0
-      this._activities = {}
-      const $node = $xml.children('activities')
-      const $acts = $node.children('activity')
-      const ownFonts = this.mediaBag.getElementsOfType('font')
+      this.zip = zip;
+      this.name = xml.getAttribute('name');
+      this.version = xml.getAttribute('version');
+      this.type = xml.getAttribute('type');
+      this.code = xml.getAttribute('code');
+      this.settings.setProperties(xml.querySelector('settings'));
+      this.activitySequence.setProperties(xml.querySelector('sequence'));
+      this.mediaBag.setProperties(xml.querySelector('mediaBag'));
+      this.reportableActs = 0;
+      this._activities = {};
+      const node = xml.querySelector('activities');
+      const acts = node.querySelectorAll('activity');
+      const ownFonts = this.mediaBag.getElementsOfType('font');
       if (ownFonts.length > 0)
-        options.ownFonts = (options.ownFonts || []).concat(ownFonts)
-      AWT.Font.checkTree(xml.querySelector('activities'), options)
+        options.ownFonts = (options.ownFonts || []).concat(ownFonts);
+      AWT.Font.checkTree(xml.querySelector('activities'), options);
       //AWT.Font.checkTree($acts, options)
-      $acts.each((_n, act) => {
-        const $act = $(act)
-        this._activities[Utils.nSlash($act.attr('name'))] = $act
-        if ($act.children('settings').attr('report') === 'true')
-          this.reportableActs++
-      })
-      return this
+      acts.forEach(act => {
+        this._activities[Utils.nSlash(act.getAttribute('name'))] = $(act);
+        const settings = act.querySelector('settings');
+        if (settings && settings.getAttribute('report') === 'true')
+          this.reportableActs++;
+      });
+      return this;
     }
 
     /**
@@ -112,7 +111,7 @@ define([
      * @returns {Activity}
      */
     getActivity(name) {
-      return Activity.getActivity(this._activities[Utils.nSlash(name)], this)
+      return Activity.getActivity(this._activities[Utils.nSlash(name)], this);
     }
 
     /**
@@ -123,12 +122,12 @@ define([
     realize(ps) {
       // Build skin
       if (this.skin === null && this.settings.skinFileName !== null && this.settings.skinFileName.length > 0)
-        this.skin = this.mediaBag.getSkinElement(this.settings.skinFileName, ps)
+        this.skin = this.mediaBag.getSkinElement(this.settings.skinFileName, ps);
 
-      this.settings.eventSounds.realize(ps, this.mediaBag)
+      this.settings.eventSounds.realize(ps, this.mediaBag);
 
       // Build all elements of type `font`
-      this.mediaBag.buildAll('font', null, ps)
+      this.mediaBag.buildAll('font', null, ps);
     }
 
     /**
@@ -209,7 +208,7 @@ define([
      * @name JClicProject#zip
      * @type {external:JSZip} */
     zip: null,
-  })
+  });
 
-  return JClicProject
-})
+  return JClicProject;
+});

@@ -579,8 +579,9 @@ define([
         static css(element, styles) {
           Object.keys(styles).forEach(k => {
             // See Tim Down's answer to: https://stackoverflow.com/a/4969647
-            const kCamel = k.replace(/-([a-z])/gi, (s, group) => group.toUpperCase());
-            element.style[kCamel] = styles[k];
+            //const kCamel = k.replace(/-([a-z])/gi, (s, group) => group.toUpperCase());
+            //element.style[kCamel] = styles[k];
+            element.style.setProperty(k, styles[k]);
           });
           return element;
         }

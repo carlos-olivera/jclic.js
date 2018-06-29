@@ -57,27 +57,27 @@ define(["../Utils"], function (Utils) {
      * cardinal number in the list.
      */
     constructor(action, sq) {
-      this.action = action
+      this.action = action;
       switch (typeof sq) {
         case 'string':
-          this.sequence = sq
-          break
+          this.sequence = sq;
+          break;
         case 'number':
-          this.actNum = sq
-          break
+          this.actNum = sq;
+          break;
       }
     }
 
     /**
-     * Loads the object settings from a specific JQuery XML element
-     * @param {external:jQuery} $xml - The XML element to parse
+     * Loads the object settings from a specific XML element
+     * @param {external:Element} xml - The XML element to parse
      */
-    setProperties($xml) {
-      this.id = $xml.attr('id')
-      this.action = $xml.attr('action') || 'JUMP'
-      this.sequence = Utils.nSlash($xml.attr('tag'))
-      this.projectPath = Utils.nSlash($xml.attr('project'))
-      return this
+    setProperties(xml) {
+      this.id = xml.getAttribute('id');
+      this.action = xml.getAttribute('action') || 'JUMP';
+      this.sequence = Utils.nSlash(xml.getAttribute('tag'));
+      this.projectPath = Utils.nSlash(xml.getAttribute('project'));
+      return this;
     }
   }
 
@@ -110,7 +110,7 @@ define(["../Utils"], function (Utils) {
      * @name JumpInfo#projectPath
      * @type {string} */
     projectPath: undefined,
-  })
+  });
 
-  return JumpInfo
-})
+  return JumpInfo;
+});

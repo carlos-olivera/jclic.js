@@ -50,23 +50,23 @@ define([
      * @param {string=} fileName - An optional file name or URL containing the sound data
      */
     constructor(id, fileName) {
-      this.id = id
+      this.id = id;
       if (fileName) {
         if (Utils.startsWith(fileName, 'data:'))
-          this.audio = new Audio(fileName)
+          this.audio = new Audio(fileName);
         else
-          this.fileName = fileName
+          this.fileName = fileName;
       }
     }
 
     /**
      * Reads the properties of this object from an XML element
-     * @param {external:jQuery} $xml - The XML element to be parsed
+     * @param {external:Element} xml - The XML element to be parsed
      */
-    setProperties($xml) {
-      this.fileName = $xml.attr('file')
-      this.enabled = Utils.getTriState($xml.attr('enabled'))
-      return this
+    setProperties(xml) {
+      this.fileName = xml.getAttribute('file');
+      this.enabled = Utils.getTriState(xml.getAttribute('enabled'));
+      return this;
     }
 
     /**
@@ -76,8 +76,8 @@ define([
      */
     realize(ps, mediaBag) {
       if (!this.audio && this.player === null && this.fileName !== null) {
-        this.player = new ActiveMediaPlayer(new MediaContent('PLAY_AUDIO', this.fileName), mediaBag, ps)
-        this.player.realize()
+        this.player = new ActiveMediaPlayer(new MediaContent('PLAY_AUDIO', this.fileName), mediaBag, ps);
+        this.player.realize();
       }
     }
 
@@ -87,10 +87,10 @@ define([
     play() {
       if (this.enabled) {
         if (this.audio) {
-          this.audio.currentTime = 0
-          this.audio.play()
+          this.audio.currentTime = 0;
+          this.audio.play();
         } else if (this.player)
-          this.player.play()
+          this.player.play();
       }
     }
 
@@ -100,9 +100,9 @@ define([
     stop() {
       if (this.enabled) {
         if (this.audio)
-          this.audio.pause()
+          this.audio.pause();
         else if (this.player)
-          this.player.stop()
+          this.player.stop();
       }
     }
   }
@@ -128,7 +128,7 @@ define([
      * @name EventSoundsElement#audio
      * @type {HTMLAudioElement} */
     audio: null,
-  })
+  });
 
-  return EventSoundsElement
-})
+  return EventSoundsElement;
+});

@@ -31,7 +31,6 @@
 /* global define, JSON, location, window */
 
 define([
-  "jquery",
   "jszip",
   "jszip-utils",
   "scriptjs",
@@ -46,7 +45,7 @@ define([
   "./bags/JumpInfo",
   "./boxes/ActiveBoxContent",
   "./report/Reporter"
-], function ($, JSZip, JSZipUtils, ScriptJS, i18n, Utils, AWT, PlayerHistory, ActiveMediaBag, Skin,
+], function (JSZip, JSZipUtils, ScriptJS, i18n, Utils, AWT, PlayerHistory, ActiveMediaBag, Skin,
   EventSounds, JClicProject, JumpInfo, ActiveBoxContent, Reporter) {
 
     /**
@@ -70,13 +69,13 @@ define([
       constructor(topDiv, options) {
 
         // JClicPlayer extends AWT.Container
-        super()
+        super();
         // Build cascading options
         //this.options = Object.assign({}, this.options, Utils.init(options))
-        options = Utils.init(options)
-        this.options = $.extend(Object.create(this.options), options)
+        options = Utils.init(options);
+        this.options = Object.assign({}, this.options, options);
         // Generate unique ID
-        this.id = `JC${(0x10000 + Math.round(Math.random() * 0xFFFF)).toString(16).toUpperCase().substr(1)}`
+        this.id = `JC${(0x10000 + Math.round(Math.random() * 0xFFFF)).toString(16).toUpperCase().substr(1)}`;
         // Identify the HTML element where this player will deploy
         this.topDiv = topDiv || document.createElement('div');
         // Avoid side effects of 'align=center' in old HTML pages
@@ -90,28 +89,27 @@ define([
         }
 
         // Build the main container
-        this.$mainContainer = $('<div/>', { class: 'JClicContainer', id: this.id })
-          .css({ width: '100%', height: '100%' })
-          .appendTo(this.topDiv)
+        this.mainContainer = Utils.HTML.div(null, 'JClicContainer', { width: '100%', height: '100%' }, { id: this.id });
+        this.topDiv.appendChild(this.mainContainer);
 
         // Attach the localization
-        i18n(this)
+        i18n(this);
 
         // Intitialize other elements
-        this.localFS = location && location.protocol === 'file:'
-        this.$div = $('<div/>', { class: 'JClicPlayer' })
-        this.project = new JClicProject()
-        this.activeMediaBag = new ActiveMediaBag()
-        this.counterVal = { score: 0, actions: 0, time: 0 }
-        this.bgImageOrigin = new AWT.Point()
-        this.buildActions()
-        this.history = new PlayerHistory(this)
-        this.audioEnabled = this.options.audioEnabled
-        this.navButtonsAlways = this.options.navButtonsAlways
-        this.defaultSkin = Skin.getSkin(this.options.skin, this)
-        this.setSkin(Skin.getSkin('@empty.xml', this))
-        this.initTimers()
-        Utils.log('info', 'JClicPlayer ready')
+        this.localFS = location && location.protocol === 'file:';
+        this.div = Utils.HTML.div(null, 'JClicPlayer');
+        this.project = new JClicProject();
+        this.activeMediaBag = new ActiveMediaBag();
+        this.counterVal = { score: 0, actions: 0, time: 0 };
+        this.bgImageOrigin = new AWT.Point();
+        this.buildActions();
+        this.history = new PlayerHistory(this);
+        this.audioEnabled = this.options.audioEnabled;
+        this.navButtonsAlways = this.options.navButtonsAlways;
+        this.defaultSkin = Skin.getSkin(this.options.skin, this);
+        this.setSkin(Skin.getSkin('@empty.xml', this));
+        this.initTimers();
+        Utils.log('info', 'JClicPlayer ready');
       }
 
       /**
@@ -120,7 +118,7 @@ define([
        * @returns {string}
        */
       getUniqueId(lb) {
-        return `${this.id}-${lb}`
+        return `${this.id}-${lb}`;
       }
 
       /**
@@ -131,53 +129,51 @@ define([
           'next': new AWT.Action('next', () => this.history.processJump(this.project.activitySequence.getJump(false, this.reporter), false)),
           'prev': new AWT.Action('prev', () => this.history.processJump(this.project.activitySequence.getJump(true, this.reporter), false)),
           'return': new AWT.Action('return', () => this.history.pop()),
-          'reset': new AWT.Action('reset', () => { if (this.actPanel && this.actPanel.act.canReinit()) this.initActivity() }),
-          'help': new AWT.Action('help', () => { if (this.actPanel) this.actPanel.showHelp() }),
+          'reset': new AWT.Action('reset', () => { if (this.actPanel && this.actPanel.act.canReinit()) this.initActivity(); }),
+          'help': new AWT.Action('help', () => { if (this.actPanel) this.actPanel.showHelp(); }),
           'info': new AWT.Action('info', () => {
             if (this.actPanel && this.actPanel.act.hasInfo()) {
               if (this.actPanel.act.infoUrl)
-                this.displayURL(this.act.infoUrl, true)
+                this.displayURL(this.act.infoUrl, true);
               else if (this.actPanel.act.infoCmd)
-                this.runCmd(this.actPanel.act.infoCmd)
+                this.runCmd(this.actPanel.act.infoCmd);
             }
           }),
           'reports': new AWT.Action('reports', () => this.showReports()),
           'audio': new AWT.Action('audio', () => {
-            this.audioEnabled = !this.audioEnabled
+            this.audioEnabled = !this.audioEnabled;
             if (!this.audioEnabled)
-              this.stopMedia()
-            EventSounds.prototype.globalEnabled = this.audioEnabled
+              this.stopMedia();
+            EventSounds.prototype.globalEnabled = this.audioEnabled;
           })
-        }
+        };
 
-        $.each(this.actions, (key, value) => {
-          value.addStatusListener(action => { if (this.skin) this.skin.actionStatusChanged(action) })
-        })
+        Object.values(this.actions).forEach(value => value.addStatusListener(act => { if (this.skin) this.skin.actionStatusChanged(act); }));
       }
 
       /**
        * Resets the main components of this player
        */
       reset() {
-        Utils.log('info', 'Restoring player')
-        this.removeActivity()
-        this.end()
-        this.activeMediaBag = new ActiveMediaBag()
-        this.history.clearHistory()
-        this.setSkin(null)
-        this.setMsg(null)
-        this.setCounterValue('score', 0)
-        this.setCounterValue('actions', 0)
-        this.setCounterValue('time', 0)
+        Utils.log('info', 'Restoring player');
+        this.removeActivity();
+        this.end();
+        this.activeMediaBag = new ActiveMediaBag();
+        this.history.clearHistory();
+        this.setSkin(null);
+        this.setMsg(null);
+        this.setCounterValue('score', 0);
+        this.setCounterValue('actions', 0);
+        this.setCounterValue('time', 0);
         if (this.skin)
-          this.skin.setWaitCursor('reset')
+          this.skin.setWaitCursor('reset');
       }
 
       /**
        * Instructs the player to stop working
        */
       stop() {
-        this.stopMedia(-1)
+        this.stopMedia(-1);
       }
 
       /**
@@ -185,25 +181,25 @@ define([
        * @returns {Promise} - A promise to be fullfilled when all pending tasks are finished.
        */
       end() {
-        let result = null
-        this.stopMedia()
-        this.closeHelpWindow()
+        let result = null;
+        this.stopMedia();
+        this.closeHelpWindow();
         if (this.reporter) {
-          result = this.reporter.end()
-          this.reporter = null
+          result = this.reporter.end();
+          this.reporter = null;
         }
         if (this.actPanel) {
-          this.actPanel.end()
-          this.actPanel.$div.remove()
-          this.actPanel = null
+          this.actPanel.end();
+          this.actPanel.$div.remove();
+          this.actPanel = null;
         }
         if (this.project) {
-          this.project.end()
-          this.project = null
+          this.project.end();
+          this.project = null;
         }
         if (this.activeMediaBag)
-          this.activeMediaBag.removeAll()
-        return result || Promise.resolve(true)
+          this.activeMediaBag.removeAll();
+        return result || Promise.resolve(true);
       }
 
       /**
@@ -212,11 +208,11 @@ define([
        */
       initReporter() {
         if (this.reporter) {
-          this.reporter.end()
-          this.reporter = null
+          this.reporter.end();
+          this.reporter = null;
         }
-        this.reporter = Reporter.getReporter(null, this)
-        return this.reporter.init()
+        this.reporter = Reporter.getReporter(null, this);
+        return this.reporter.init();
       }
 
       /**
@@ -226,37 +222,37 @@ define([
       initTimers() {
         // Main timer
         if (this.timer)
-          this.timer.stop()
+          this.timer.stop();
         this.timer = new AWT.Timer(() => {
-          this.incCounterValue('time')
+          this.incCounterValue('time');
           if (this.actPanel && this.actPanel.act.maxTime > 0
             && this.actPanel.playing
             && this.counterVal['time'] >= this.actPanel.act.maxTime)
-            this.actPanel.finishActivity(false)
-        }, 1000, false)
+            this.actPanel.finishActivity(false);
+        }, 1000, false);
 
         // One-time timer, for delayed actions
         if (this.delayedTimer)
-          this.delayedTimer.stop()
+          this.delayedTimer.stop();
         this.delayedTimer = new AWT.Timer(() => {
           if (this.delayedAction)
-            this.delayedAction.processEvent(this.delayedAction, null)
-        }, 1000, false)
-        this.delayedTimer.repeats = false
+            this.delayedAction.processEvent(this.delayedAction, null);
+        }, 1000, false);
+        this.delayedTimer.repeats = false;
       }
 
       /**
        * Opens the reports dialog
        */
       showReports() {
-        if (this.skin) this.skin.showReports(this.reporter)
+        if (this.skin) this.skin.showReports(this.reporter);
       }
 
       /**
        * Closes the help dialog window
        */
       closeHelpWindow() {
-        if (this.skin) this.skin._closeDlg(false)
+        if (this.skin) this.skin._closeDlg(false);
       }
 
       /**
@@ -264,11 +260,11 @@ define([
        * @param {?Skin} newSkin - The skin to use. When `null`, `defaultSkin` will be used.
        */
       setSkin(newSkin) {
-        newSkin = newSkin || (this.project && this.project.skin ? this.project.skin : this.defaultSkin)
+        newSkin = newSkin || (this.project && this.project.skin ? this.project.skin : this.defaultSkin);
         if (newSkin && (this.skin === null || newSkin.name !== this.skin.name)) {
-          newSkin.attach(this)
-          this.skin = newSkin
-          this.skin.doLayout()
+          newSkin.attach(this);
+          this.skin = newSkin;
+          this.skin.doLayout();
         }
       }
 
@@ -279,11 +275,66 @@ define([
       setProject(project) {
         if (this.project) {
           if (this.project !== project)
-            this.project.end()
-          this.removeActivity()
+            this.project.end();
+          this.removeActivity();
         }
-        this.project = project || new JClicProject()
-        this.project.realize(this)
+        this.project = project || new JClicProject();
+        this.project.realize(this);
+      }
+
+      /**
+       * Loads and parses a `.jclic` XML file
+       * @param {string} fp 
+       * @param {string} fullPath 
+       */
+      processProjectFile(fp, fullPath) {
+        return fetch(fp)
+          .then(response => {
+            if (response.ok)
+              return response.text();
+            throw `Network response error ${response.status} (${response.statusText})`;
+          })
+          .then(text => {
+            const data = Utils.parseXmlText(text);
+            if (data.nodeName !== 'JClicProject')
+              throw `Bad data! Project not loaded`;
+            const prj = new JClicProject();
+            prj.setProperties(data, fullPath, this.zip, this.options);
+            Utils.log('info', `Project file loaded and parsed: ${project}`);
+
+            const elements = prj.mediaBag.buildAll(null, element => {
+              Utils.log('trace', `"${element.name}" ready.`);
+              this.incProgress(1);
+            }, this);
+
+            // MOURE FORA!!!
+            Utils.log('info', `Media elements to be loaded: ${elements}`);
+            this.setProgress(0, elements);
+            let loops = 0;
+            const interval = 500;
+            this.setWaitCursor(true);
+            const checkMedia = window.setInterval(() => {
+              // Wait for a maximum time of two minutes
+              if (++loops > this.options.maxWaitTime / interval) {
+                window.clearInterval(checkMedia);
+                this.setProgress(-1);
+                this.setWaitCursor(false);
+                Utils.log('error', 'Error loading media');
+              }
+              const waitingObjects = prj.mediaBag.countWaitingElements();
+              // player.setProgress(waiting)
+              if (waitingObjects === -1) {
+                window.clearInterval(checkMedia);
+                this.setProgress(-1);
+                this.setWaitCursor(false);
+                // Call `load` again, passing the loaded [JClicProject](JClicProject.html) as a parameter
+                this.load(prj, sequence, activity);
+              }
+            }, interval);
+
+            return prj;
+          })
+          .finally(() => this.setWaitCursor(false));
       }
 
       /**
@@ -302,182 +353,142 @@ define([
        */
       load(project, sequence, activity) {
 
-        this.forceFinishActivity()
-        this.setWaitCursor(true)
+        this.forceFinishActivity();
+        this.setWaitCursor(true);
 
         // The ActivityPanel object to be obtained as a result of the loading process
-        let actp = null
+        let actp = null;
 
         // step one: load the project
         if (project) {
           if (typeof project === 'string') {
 
             // Param `project` is a file name or URL (otherwise, is a realized `JClicProject` object)
-            const fullPath = Utils.getPath(this.basePath, project)
+            const fullPath = Utils.getPath(this.basePath, project);
 
             // Previous step: Check if `project` points to a "project.json" file
             if (fullPath.endsWith('project.json')) {
-              Utils.log('info', `Loading JSON info from: ${fullPath}`)
-              $.getJSON(fullPath).done(json => {
-                // Read the `mainFile` field of `project.json`
-                if (Utils.endsWith(json['mainFile'], '.jclic')) {
-                  // Load project's main file
-                  this.load(Utils.getPath(Utils.getBasePath(fullPath), json['mainFile']), sequence, activity)
-                } else {
-                  Utils.log('error', `Invalid or null "mainFile" specified in ${fullPath} - "project.json".`)
-                }
-              }).fail((jqhxr, textStatus, error) => {
-                const errMsg = `${textStatus} (${error}) while loading ${project}`
-                Utils.log(errMsg)
-                alert(`Error!\n${errMsg}`)
-              }).always(
-                () => this.setWaitCursor(false)
-              )
-              return
+              Utils.log('info', `Loading JSON info from: ${fullPath}`);
+              return fetch(fullPath)
+                .then(response => {
+                  if (response.ok)
+                    return response.json();
+                  throw `Network response error ${response.status} (${response.statusText})`;
+                })
+                .then(json => {
+                  // Read the `mainFile` field of `project.json`
+                  if (Utils.endsWith(json['mainFile'], '.jclic'))
+                    // Load project's main file
+                    return this.load(Utils.getPath(Utils.getBasePath(fullPath), json['mainFile']), sequence, activity);
+                  else
+                    throw `Invalid or null "mainFile" specified in ${fullPath} - "project.json"`;
+                }).catch(err => {
+                  const errMsg = `Error loading "${project}": ${err}`;
+                  Utils.log('error', errMsg);
+                  alert(`Error!\n${errMsg}`);
+                })
+                .finally(() => this.setWaitCursor(false));
             }
 
             // Step 0: Check if `project` points to a ZIP file
             if (fullPath.endsWith('.zip')) {
               // TODO: Implement register of zip files in PlayerHistory
-              this.zip = null
-              Utils.log('info', `Loading ZIP file: ${fullPath}`)
+              this.zip = null;
+              Utils.log('info', `Loading ZIP file: ${fullPath}`);
 
               // Launch loading of ZIP file in a separated thread
-              JSZipUtils.getBinaryContent(fullPath, (err, data) => {
-                if (err) {
-                  this.setWaitCursor(false)
-                  Utils.log('error', `Error loading ZIP file: ${err.toString()}`)
-                  return
-                }
-                new JSZip().loadAsync(data).then(zip => {
-                  this.zip = zip
-                  this.zip.fullZipPath = fullPath
-                  this.zip.zipBasePath = Utils.getBasePath(fullPath)
-                  let fileName = null
-                  // Check if ZIP contains a "project.json" file (as in the ".scorm.zip" files generated by JClic Author)
-                  if (this.zip.files['project.json']) {
-                    this.zip.files['project.json'].async('string').then(content => {
-                      try {
-                        const json = JSON.parse(content)
-                        // Read the `mainFile` field of `project.json`
-                        if (Utils.endsWith(json['mainFile'], '.jclic')) {
-                          // Load project's main file
-                          this.load(Utils.getPath(this.zip.zipBasePath, json['mainFile']), sequence, activity)
-                        } else {
-                          Utils.log('error', `Invalid or null "mainFile" specified in ${fullPath} - "project.json".`)
-                        }
-                      } catch (err) {
-                        Utils.log('error', `Error reading "project.json" in ${fullPath}: ${err ? err.toString() : 'unknown error'}`)
-                      }
-                    }).catch(reason => {
-                      Utils.log('error', `Error reading ZIP file: ${reason ? reason.toString() : 'unknown reason'}`)
-                    })
-                  } else {
-                    // Find first file with extension '.jclic' inside the zip file
-                    fileName = Object.keys(this.zip.files).find(fn => fn.endsWith('.jclic')) || null
-                    if (fileName)
-                      this.load(Utils.getPath(this.zip.zipBasePath, fileName), sequence, activity)
-                    else
-                      Utils.log('error', 'This ZIP file does not contain any JClic project!')
-                  }
-                  this.setWaitCursor(false)
-                }).catch(reason => {
-                  Utils.log('error', `Error reading ZIP file: ${reason ? reason.toString() : 'unknown reason'}`)
-                  this.setWaitCursor(false)
+              return fetch(fullPath)
+                .then(response => {
+                  if (response.ok)
+                    return response.blob();
+                  throw `Network response error ${response.status} (${response.statusText})`;
                 })
-              })
-              return
-            } else if (this.localFS && window.JClicObject && !window.JClicObject.projectFiles[fullPath]) {
-              ScriptJS(`${fullPath}.js`, () => this.load(project, sequence, activity))
-              this.setWaitCursor(false)
-              return
+                .then(JSZip.loadAsync)
+                .then(zip => {
+                  this.zip = zip;
+                  this.zip.fullZipPath = fullPath;
+                  this.zip.zipBasePath = Utils.getBasePath(fullPath);
+                  let fileName = null;
+                  // Check if ZIP contains a "project.json" file (as in the ".scorm.zip" files generated by JClic Author)
+                  if (this.zip.files['project.json'])
+                    return this.zip.files['project.json'].async('string')
+                      .then(content => {
+                        const json = JSON.parse(content);
+                        // Read the `mainFile` field of `project.json`
+                        if (Utils.endsWith(json['mainFile'], '.jclic'))
+                          // Load project's main file
+                          return this.load(Utils.getPath(this.zip.zipBasePath, json['mainFile']), sequence, activity);
+                        else
+                          throw `Invalid or null "mainFile" specified in ${fullPath} - "project.json"`;
+                      });
+                  // Find first file with extension '.jclic' inside the zip file
+                  fileName = Object.keys(this.zip.files).find(fn => fn.endsWith('.jclic')) || null;
+                  if (fileName)
+                    this.load(Utils.getPath(this.zip.zipBasePath, fileName), sequence, activity);
+                  else
+                    Utils.log('error', 'This ZIP file does not contain any JClic project!');
+                })
+                .catch(err => {
+                  const errMsg = `Error loading "${project}": ${err}`;
+                  Utils.log('error', errMsg);
+                  alert(`Error!\n${errMsg}`);
+                })
+                .finally(() => this.setWaitCursor(false));
+            }
+
+            // When in local file system, try to load `_projectname_.js`
+            if (this.localFS && window.JClicObject && !window.JClicObject.projectFiles[fullPath]) {
+              ScriptJS(`${fullPath}.js`, () => this.load(project, sequence, activity));
+              this.setWaitCursor(false);
+              return;
             }
 
             // Step one: load the project file
-            const processProjectFile = fp => {
-              $.get(fp, null, null, 'xml').done(data => {
-                if (data === null || typeof data !== 'object') {
-                  Utils.log('error', `Bad data. Project not loaded: ${project}`)
-                  return
-                }
-                const prj = new JClicProject()
-                prj.setProperties($(data).find('JClicProject'), fullPath, this.zip, this.options)
-                Utils.log('info', `Project file loaded and parsed: ${project}`)
-                const elements = prj.mediaBag.buildAll(null, element => {
-                  Utils.log('trace', `"${element.name}" ready.`)
-                  this.incProgress(1)
-                }, this)
-                Utils.log('info', `Media elements to be loaded: ${elements}`)
-                this.setProgress(0, elements)
-                let loops = 0
-                const interval = 500
-                this.setWaitCursor(true)
-                const checkMedia = window.setInterval(() => {
-                  // Wait for a maximum time of two minutes
-                  if (++loops > this.options.maxWaitTime / interval) {
-                    window.clearInterval(checkMedia)
-                    this.setProgress(-1)
-                    this.setWaitCursor(false)
-                    Utils.log('error', 'Error loading media')
-                  }
-                  const waitingObjects = prj.mediaBag.countWaitingElements()
-                  // player.setProgress(waiting)
-                  if (waitingObjects === -1) {
-                    window.clearInterval(checkMedia)
-                    this.setProgress(-1)
-                    this.setWaitCursor(false)
-                    // Call `load` again, passing the loaded [JClicProject](JClicProject.html) as a parameter
-                    this.load(prj, sequence, activity)
-                  }
-                }, interval)
-              }).fail((jqXHR, textStatus, errorThrown) => {
-                const errMsg = `${textStatus} (${errorThrown}) while loading ${project}`
-                Utils.log(errMsg)
-                alert(`Error!\n${errMsg}`)
-              }).always(() => this.setWaitCursor(false))
-            }
 
-            Utils.log('info', `Loading project: ${project}`)
-            let fp = fullPath
+            Utils.log('info', `Loading project: ${project}`);
+            let fp = fullPath;
 
+            // CONTINUAR AQUÍ
+            
             // Special case for ZIP files
             if (this.zip) {
-              const fName = Utils.getRelativePath(fp, this.zip.zipBasePath)
+              const fName = Utils.getRelativePath(fp, this.zip.zipBasePath);
               if (this.zip.files[fName]) {
-                this.zip.file(fName).async('string').then(text => {
-                  processProjectFile(`data:text/xml;charset=UTF-8,${text}`)
-                }).catch(reason => {
-                  Utils.log('error', `Unable to extract "${fName}" from ZIP file because of: ${reason ? reason.toString() : 'unknown reason'}`)
-                  this.setWaitCursor(false)
-                })
-                return
+                this.zip.file(fName).async('string')
+                  .then(text => {
+                    return this.processProjectFile(`data:text/xml;charset=UTF-8,${text}`);
+                  }).catch(reason => {
+                    Utils.log('error', `Unable to extract "${fName}" from ZIP file because of: ${reason ? reason.toString() : 'unknown reason'}`);
+                    this.setWaitCursor(false);
+                  });
+                return;
               }
             }
             // Special case for local file systems (using `file` protocol)
             else if (this.localFS) {
               // Check if file is already loaded in the global variable `JClicObject`
               if (window.JClicObject && window.JClicObject.projectFiles[fullPath]) {
-                fp = `data:text/xml;charset=UTF-8,${window.JClicObject.projectFiles[fullPath]}`
+                fp = `data:text/xml;charset=UTF-8,${window.JClicObject.projectFiles[fullPath]}`;
               } else {
-                Utils.log('error', `Unable to load: ${fullPath}.js`)
-                this.setWaitCursor(false)
-                return
+                Utils.log('error', `Unable to load: ${fullPath}.js`);
+                this.setWaitCursor(false);
+                return;
               }
             }
-            processProjectFile(fp)
-            return
+            processProjectFile(fp);
+            return;
           }
 
           // From here, assume that `project` is a [JClicProject](JClicProject.html)
-          this.setProject(project)
+          this.setProject(project);
 
           // If none specified, start with the first element of the sequence
           if (!sequence && !activity)
-            sequence = '0'
+            sequence = '0';
 
           // start reporter session
           if (this.reporter)
-            this.reporter.newSession(project)
+            this.reporter.newSession(project);
 
         }
 
@@ -485,39 +496,39 @@ define([
 
         // Check for null or undefined, but consider `0` a valid value
         if (sequence != null) {
-          Utils.log('info', `Loading sequence: ${sequence}`)
-          this.navButtonsDisabled = false
+          Utils.log('info', `Loading sequence: ${sequence}`);
+          this.navButtonsDisabled = false;
           // Try to load sequence by tag
-          let ase = null
+          let ase = null;
           if (typeof sequence === 'string')
-            ase = this.project.activitySequence.getElementByTag(sequence, true)
+            ase = this.project.activitySequence.getElementByTag(sequence, true);
           if (ase === null) {
             // Try to treat 'sequence' as a number
-            const n = parseInt(sequence, 10)
+            const n = parseInt(sequence, 10);
             if (typeof n === 'number')
-              ase = this.project.activitySequence.getElement(n, true)
+              ase = this.project.activitySequence.getElement(n, true);
           }
 
           if (ase !== null) {
             // Success! We have a real [ActivitySequenceElement](ActivitySequenceElement.html)
             if (this.reporter)
-              this.reporter.newSequence(ase)
-            activity = ase.activityName
+              this.reporter.newSequence(ase);
+            activity = ase.activityName;
           }
         }
 
         // Step three: load the activity
         if (activity) {
-          const act = this.project.getActivity(activity)
+          const act = this.project.getActivity(activity);
           if (act) {
             // Success! We have a real [Activity](Activity.html)
-            Utils.log('info', `Loading activity: ${activity}`)
-            act.prepareMedia(this)
-            this.project.activitySequence.checkCurrentActivity(act.name)
-            actp = act.getActivityPanel(this)
-            actp.buildVisualComponents()
+            Utils.log('info', `Loading activity: ${activity}`);
+            act.prepareMedia(this);
+            this.project.activitySequence.checkCurrentActivity(act.name);
+            actp = act.getActivityPanel(this);
+            actp.buildVisualComponents();
           } else {
-            Utils.log('error', `Missing activity: ${activity}`)
+            Utils.log('error', `Missing activity: ${activity}`);
           }
         }
 
@@ -525,71 +536,71 @@ define([
 
         // Remove the current ActivityPanel
         if (this.actPanel !== null) {
-          this.actPanel.end()
-          this.actPanel.$div.remove()
-          this.actPanel = null
-          this.setCounterValue('time', 0)
+          this.actPanel.end();
+          this.actPanel.$div.remove();
+          this.actPanel = null;
+          this.setCounterValue('time', 0);
         }
 
         // Attach the new ActivityPanel
         if (actp) {
           // Sets the actPanel member to this ActivityPanel
-          this.actPanel = actp
+          this.actPanel = actp;
 
           if (this.options.fade > 0)
-            this.actPanel.$div.css('display', 'none')
+            this.actPanel.$div.css('display', 'none');
 
           // Places the JQuery DOM element of actPanel within the player main panel
-          this.$div.prepend(this.actPanel.$div)
+          this.$div.prepend(this.actPanel.$div);
           if (this.skin)
-            this.skin.resetAllCounters(false)
+            this.skin.resetAllCounters(false);
 
           // Sets the current skin
           if (this.actPanel.skin)
-            this.setSkin(this.actPanel.skin)
+            this.setSkin(this.actPanel.skin);
           else if (this.project.skin) {
-            this.setSkin(this.project.skin)
-            this.lastProjectSkin = this.project.skin
+            this.setSkin(this.project.skin);
+            this.lastProjectSkin = this.project.skin;
           }
           else if (this.lastProjectSkin)
-            this.setSkin(this.lastProjectSkin)
+            this.setSkin(this.lastProjectSkin);
           else
-            this.setSkin(null)
+            this.setSkin(null);
 
           if (this.skin) {
             // Enable or disable actions
-            const hasReturn = this.history.storedElementsCount() > 0 || this.options.returnAsExit
+            const hasReturn = this.history.storedElementsCount() > 0 || this.options.returnAsExit;
             const navBtnFlag = this.navButtonsAlways ?
               'both' : this.navButtonsDisabled ?
-                'none' : this.project.activitySequence.getNavButtonsFlag()
+                'none' : this.project.activitySequence.getNavButtonsFlag();
             this.actions['next'].setEnabled((navBtnFlag === 'fwd' || navBtnFlag === 'both') &&
-              this.project.activitySequence.hasNextAct(hasReturn))
+              this.project.activitySequence.hasNextAct(hasReturn));
             this.actions['prev'].setEnabled((navBtnFlag === 'back' || navBtnFlag === 'both') &&
-              this.project.activitySequence.hasPrevAct(hasReturn))
-            this.actions['return'].setEnabled(hasReturn)
-            this.actions['help'].setEnabled(this.actPanel.act.helpWindowAllowed())
-            this.actions['reset'].setEnabled(this.actPanel.act.canReinit())
-            this.actions['info'].setEnabled(this.actPanel.act.hasInfo())
+              this.project.activitySequence.hasPrevAct(hasReturn));
+            this.actions['return'].setEnabled(hasReturn);
+            this.actions['help'].setEnabled(this.actPanel.act.helpWindowAllowed());
+            this.actions['reset'].setEnabled(this.actPanel.act.canReinit());
+            this.actions['info'].setEnabled(this.actPanel.act.hasInfo());
           }
-          this.doLayout()
-          this.initActivity()
+          this.doLayout();
+          this.initActivity();
 
-          this.actPanel.$div.fadeIn(this.options.fade, () => this.activityReady())
+          this.actPanel.$div.fadeIn(this.options.fade, () => this.activityReady());
         }
-        this.setWaitCursor(false)
+        this.setWaitCursor(false);
       }
 
       /**
        * Forces the current activity to stop playing.
        */
       forceFinishActivity() {
-        this.timer.stop()
-        this.delayedTimer.stop()
+        this.timer.stop();
+        this.delayedTimer.stop();
         if (this.actPanel) {
-          this.closeHelpWindow()
-          this.actPanel.forceFinishActivity()
-          this.stopMedia()
-          this.activeMediaBag.removeAll()
+          this.closeHelpWindow();
+          this.actPanel.forceFinishActivity();
+          this.stopMedia();
+          this.activeMediaBag.removeAll();
         }
       }
 
@@ -598,13 +609,13 @@ define([
        * Removes the current {@link Activity#Panel} from this player
        */
       removeActivity() {
-        this.forceFinishActivity()
+        this.forceFinishActivity();
         if (this.actPanel) {
-          this.actPanel.end()
-          this.actPanel.$div.remove()
-          this.actPanel = null
-          this.setMsg(null)
-          this.doLayout()
+          this.actPanel.end();
+          this.actPanel.$div.remove();
+          this.actPanel = null;
+          this.setMsg(null);
+          this.doLayout();
         }
       }
 
@@ -613,19 +624,19 @@ define([
        * Initializes the activity
        */
       initActivity() {
-        this.setWaitCursor(true)
-        this.timer.stop()
-        this.delayedTimer.stop()
-        this.setCounterValue('time', 0)
-        this.stopMedia()
+        this.setWaitCursor(true);
+        this.timer.stop();
+        this.delayedTimer.stop();
+        this.setCounterValue('time', 0);
+        this.stopMedia();
         if (this.actPanel) {
-          this.actPanel.initActivity()
-          this.timer.start()
+          this.actPanel.initActivity();
+          this.timer.start();
           if (!this.actPanel.act.mustPauseSequence())
-            this.startAutoPassTimer()
-          Utils.log('info', `Activity "${this.actPanel.act.name}" running`)
+            this.startAutoPassTimer();
+          Utils.log('info', `Activity "${this.actPanel.act.name}" running`);
         }
-        this.setWaitCursor(false)
+        this.setWaitCursor(false);
       }
 
       /**
@@ -634,8 +645,8 @@ define([
        */
       activityReady() {
         if (this.actPanel) {
-          this.actPanel.activityReady()
-          Utils.log('info', 'Activity ready')
+          this.actPanel.activityReady();
+          Utils.log('info', 'Activity ready');
         }
       }
 
@@ -643,10 +654,10 @@ define([
        * Starts the activity. This method is usually called from text activities with previous text.
        */
       startActivity() {
-        this.setWaitCursor(true)
+        this.setWaitCursor(true);
         if (this.actPanel)
-          this.actPanel.startActivity()
-        this.setWaitCursor(false)
+          this.actPanel.startActivity();
+        this.setWaitCursor(false);
       }
 
       /**
@@ -661,13 +672,13 @@ define([
           mainCss = {
             'background-color': this.actPanel ? this.actPanel.act.bgColor : 'azure',
             'background-image': ''
-          }
+          };
 
         if (this.actPanel) {
-          const act = this.actPanel.act
+          const act = this.actPanel.act;
           if (act.bgGradient)
             // Canvas version also available
-            mainCss['background-image'] = act.bgGradient.getCss()
+            mainCss['background-image'] = act.bgGradient.getCss();
 
           if (act.bgImageFile && act.bgImageFile.length > 0) {
             this.project.mediaBag.getElement(act.bgImageFile, true).getFullPathPromise().then(bgImageUrl => {
@@ -675,36 +686,36 @@ define([
                 'background-image': 'url(\'' + bgImageUrl + '\')',
                 'background-repeat': act.tiledBgImg ? 'repeat' : 'no-repeat',
                 'background-position': act.tiledBgImg ? '' : 'center center'
-              })
-            })
+              });
+            });
           }
 
           // Activity panel settings
           // Calc the maximum rectangle available for the activity panel
           const
             m = Utils.settings.BoxBase.AC_MARGIN,
-            proposedRect = new AWT.Rectangle(m, m, width - 2 * m, height - 2 * m)
+            proposedRect = new AWT.Rectangle(m, m, width - 2 * m, height - 2 * m);
 
           if (this.actPanel.bgImage && !act.tiledBgImg && act.absolutePositioned) {
             // Special case: when the activity has a background image not tiled, and an absolute
             // position has been specified, the ActivityPanel must be placed at this absolute
             // position, relative to the background image
-            this.bgImageOrigin.x = (width - this.actPanel.bgImage.width) / 2
-            this.bgImageOrigin.y = (height - this.actPanel.bgImage.height) / 2
-            proposedRect.pos.moveTo(this.bgImageOrigin)
-            proposedRect.dim.width -= this.bgImageOrigin.x - m
-            proposedRect.dim.height -= this.bgImageOrigin.y - m
-            proposedRect.dim.width = Math.min(proposedRect.dim.width, width)
-            proposedRect.dim.height = Math.min(proposedRect.dim.height, height)
+            this.bgImageOrigin.x = (width - this.actPanel.bgImage.width) / 2;
+            this.bgImageOrigin.y = (height - this.actPanel.bgImage.height) / 2;
+            proposedRect.pos.moveTo(this.bgImageOrigin);
+            proposedRect.dim.width -= this.bgImageOrigin.x - m;
+            proposedRect.dim.height -= this.bgImageOrigin.y - m;
+            proposedRect.dim.width = Math.min(proposedRect.dim.width, width);
+            proposedRect.dim.height = Math.min(proposedRect.dim.height, height);
           }
 
           // ActivityPanel will calculate and set its position and size based on the maximum and optimal
           // available space
           /* TODO: Try with a computed rectangle instead of "this", to avoid the loss of the right margin
            * in narrow displays */
-          this.actPanel.fitTo(proposedRect, this)
+          this.actPanel.fitTo(proposedRect, this);
         }
-        this.$div.css(mainCss)
+        this.$div.css(mainCss);
       }
 
       /**
@@ -716,9 +727,9 @@ define([
        */
       playMedia(mediaContent, mediaPlacement = null, delayedActions = null) {
 
-        let ji = null
-        const fn = mediaContent.mediaFileName
-        let action = null
+        let ji = null;
+        const fn = mediaContent.mediaFileName;
+        let action = null;
 
         switch (mediaContent.mediaType) {
           case 'PLAY_AUDIO':
@@ -727,56 +738,56 @@ define([
           case 'RECORD_AUDIO':
           case 'PLAY_RECORDED_AUDIO':
             if (this.audioEnabled) {
-              const amp = this.activeMediaBag.getActiveMediaPlayer(mediaContent, this.project.mediaBag, this)
+              const amp = this.activeMediaBag.getActiveMediaPlayer(mediaContent, this.project.mediaBag, this);
               if (amp)
-                action = () => amp.play(mediaPlacement)
+                action = () => amp.play(mediaPlacement);
             }
-            break
+            break;
 
           case 'RUN_CLIC_PACKAGE':
-            ji = new JumpInfo('JUMP', fn)
+            ji = new JumpInfo('JUMP', fn);
             if (mediaContent.externalParam) {
               // Relative path computed in History.processJump
-              ji.projectPath = mediaContent.externalParam
+              ji.projectPath = mediaContent.externalParam;
             }
-            action = () => this.history.processJump(ji, true)
-            break
+            action = () => this.history.processJump(ji, true);
+            break;
 
           case 'RUN_CLIC_ACTIVITY':
-            this.history.push()
-            action = () => this.load(null, null, fn)
-            break
+            this.history.push();
+            action = () => this.load(null, null, fn);
+            break;
 
           case 'RETURN':
             if (this.history.storedElementsCount() > 0 || !this.options.returnAsExit) {
-              action = () => this.history.pop()
-              break
+              action = () => this.history.pop();
+              break;
             }
           case 'EXIT':
-            ji = new JumpInfo('EXIT', fn)
-            action = () => this.history.processJump(ji, false)
-            break
+            ji = new JumpInfo('EXIT', fn);
+            action = () => this.history.processJump(ji, false);
+            break;
 
           case 'RUN_EXTERNAL':
-            action = () => this.runCmd(fn)
-            break
+            action = () => this.runCmd(fn);
+            break;
 
           case 'URL':
             if (fn)
               // When mediaContent.level is 2 or more, the URL will be opened in a separate window.
-              action = () => this.displayURL(fn, mediaContent.level > 1)
-            break
+              action = () => this.displayURL(fn, mediaContent.level > 1);
+            break;
 
           default:
-            Utils.log('error', `Unknown media type: ${mediaContent.mediaType}`)
-            break
+            Utils.log('error', `Unknown media type: ${mediaContent.mediaType}`);
+            break;
         }
 
         // Execute the action or pass callback
         if (delayedActions && action)
-          delayedActions.push(action)
+          delayedActions.push(action);
         else if (action)
-          action()
+          action();
       }
 
       /**
@@ -786,8 +797,8 @@ define([
        */
       stopMedia(level) {
         if (typeof level !== 'number')
-          level = -1
-        this.activeMediaBag.stopAll(level)
+          level = -1;
+        this.activeMediaBag.stopAll(level);
       }
 
       /**
@@ -796,7 +807,7 @@ define([
        * @param {string} cmd
        */
       runCmd(cmd) {
-        Utils.log('warn', `Unsupported call to external command: "${cmd}"`)
+        Utils.log('warn', `Unsupported call to external command: "${cmd}"`);
       }
 
       /**
@@ -805,21 +816,21 @@ define([
        * otherwise.
        */
       activityFinished(_completedOK) {
-        this.closeHelpWindow()
-        Utils.log('info', 'Activity finished')
-        this.timer.stop()
-        this.startAutoPassTimer()
+        this.closeHelpWindow();
+        Utils.log('info', 'Activity finished');
+        this.timer.stop();
+        this.startAutoPassTimer();
       }
 
       /**
        * Starts the automatic jump to next activity, when applicable.
        */
       startAutoPassTimer() {
-        const ase = this.project.activitySequence.getCurrentAct()
+        const ase = this.project.activitySequence.getCurrentAct();
         if (ase !== null && ase.delay > 0 && !this.delayedTimer.isRunning() && !this.navButtonsDisabled) {
-          this.delayedAction = this.actions['next']
-          this.delayedTimer.interval = ase.delay * 1000
-          this.delayedTimer.start()
+          this.delayedAction = this.actions['next'];
+          this.delayedTimer.interval = ase.delay * 1000;
+          this.delayedTimer.start();
         }
       }
 
@@ -831,7 +842,7 @@ define([
        * @returns {string} - Translated text
        */
       getMsg(key) {
-        return key
+        return key;
       }
 
       /**
@@ -840,14 +851,14 @@ define([
        * @param {ActiveBoxContent} abc - The content of the message
        */
       setMsg(abc) {
-        const ab = this.skin ? this.skin.getMsgBox() : null
+        const ab = this.skin ? this.skin.getMsgBox() : null;
         if (ab) {
-          ab.clear()
-          this.skin.invalidate(ab).update()
-          ab.setContent(abc ? abc : ActiveBoxContent.EMPTY_CONTENT)
+          ab.clear();
+          this.skin.invalidate(ab).update();
+          ab.setContent(abc ? abc : ActiveBoxContent.EMPTY_CONTENT);
           // TODO: Move this method to Skin
-          this.skin.invalidate(ab).update()
-          ab.playMedia(this)
+          this.skin.invalidate(ab).update();
+          ab.playMedia(this);
         }
       }
 
@@ -856,7 +867,7 @@ define([
        */
       playMsg() {
         if (this.skin && this.skin.getMsgBox())
-          this.skin.getMsgBox().playMedia(this)
+          this.skin.getMsgBox().playMedia(this);
       }
 
       /**
@@ -865,9 +876,9 @@ define([
        * @param {number} newValue - The value to be set
        */
       setCounterValue(counter, newValue) {
-        this.counterVal[counter] = newValue
+        this.counterVal[counter] = newValue;
         if (this.skin && this.skin.counters[counter])
-          this.skin.counters[counter].setValue(newValue)
+          this.skin.counters[counter].setValue(newValue);
       }
 
       /**
@@ -876,7 +887,7 @@ define([
        * @returns {number}
        */
       getCounterValue(counter) {
-        return this.counterVal[counter]
+        return this.counterVal[counter];
       }
 
       /**
@@ -886,8 +897,8 @@ define([
        */
       setCounterEnabled(counter, bEnabled) {
         if (this.skin) {
-          this.skin.enableCounter(counter, bEnabled)
-          this.setCountDown(counter, 0)
+          this.skin.enableCounter(counter, bEnabled);
+          this.setCountDown(counter, 0);
         }
       }
 
@@ -896,16 +907,16 @@ define([
        * @param {string} counter - The id of the counter ('score', 'actions' or 'time')
        */
       incCounterValue(counter) {
-        this.counterVal[counter]++
+        this.counterVal[counter]++;
 
         const
           actp = this.actPanel,
-          cnt = this.skin ? this.skin.counters[counter] : null
+          cnt = this.skin ? this.skin.counters[counter] : null;
 
         if (cnt)
-          cnt.setValue(this.counterVal[counter])
+          cnt.setValue(this.counterVal[counter]);
         if (counter === 'actions' && actp !== null && actp.act.maxActions > 0 && actp.playing && this.counterVal['actions'] >= actp.act.maxActions)
-          window.setTimeout(() => { actp.finishActivity(actp.solved) }, 0)
+          window.setTimeout(() => { actp.finishActivity(actp.solved) }, 0);
       }
 
       /**
@@ -916,7 +927,7 @@ define([
       setCountDown(counter, maxValue) {
         //this.counterVal[counter] = maxValue
         if (this.skin && this.skin.counters[counter])
-          this.skin.counters[counter].setCountDown(maxValue)
+          this.skin.counters[counter].setCountDown(maxValue);
       }
 
       /**
@@ -925,7 +936,7 @@ define([
        */
       setWaitCursor(status) {
         if (this.skin)
-          this.skin.setWaitCursor(status)
+          this.skin.setWaitCursor(status);
       }
 
       /**
@@ -935,7 +946,7 @@ define([
        */
       setProgress(val, max) {
         if (this.skin)
-          this.skin.setProgress(val, max)
+          this.skin.setProgress(val, max);
       }
 
       /**
@@ -944,7 +955,7 @@ define([
        */
       incProgress(val) {
         if (this.skin)
-          this.skin.incProgress(val)
+          this.skin.incProgress(val);
       }
 
       /**
@@ -953,7 +964,7 @@ define([
        * @returns {ActiveMediaPlayer}
        */
       getActiveMediaPlayer(mediaContent) {
-        return this.activeMediaBag && mediaContent ? this.activeMediaBag.getActiveMediaPlayer(mediaContent, this.project.mediaBag, this) : null
+        return this.activeMediaBag && mediaContent ? this.activeMediaBag.getActiveMediaPlayer(mediaContent, this.project.mediaBag, this) : null;
       }
 
       /**
@@ -961,16 +972,16 @@ define([
        * @param {Activity} act - The activity that is sending the notification
        */
       reportNewActivity(act) {
-        const ase = this.project.activitySequence.getCurrentAct()
+        const ase = this.project.activitySequence.getCurrentAct();
         if (this.reporter) {
           if (ase.tag === this.reporter.getCurrentSequenceTag())
             // Notify that the sequence has changed
-            this.reporter.newSequence(ase)
+            this.reporter.newSequence(ase);
           if (act.includeInReports)
-            this.reporter.newActivity(act)
+            this.reporter.newActivity(act);
         }
-        this.setCounterValue('actions', 0)
-        this.setCounterValue('score', 0)
+        this.setCounterValue('actions', 0);
+        this.setCounterValue('score', 0);
       }
 
       /**
@@ -984,10 +995,10 @@ define([
        */
       reportNewAction(act, type, source, dest, ok, currentScore) {
         if (this.reporter && act.includeInReports && act.reportActions)
-          this.reporter.newAction(type, source, dest, ok)
+          this.reporter.newAction(type, source, dest, ok);
         if (currentScore >= 0) {
-          this.incCounterValue('actions')
-          this.setCounterValue('score', currentScore)
+          this.incCounterValue('actions');
+          this.setCounterValue('score', currentScore);
         }
       }
 
@@ -998,7 +1009,7 @@ define([
        */
       reportEndActivity(act, solved) {
         if (this.reporter && act.includeInReports)
-          this.reporter.endActivity(this.counterVal['score'], this.counterVal['actions'], solved)
+          this.reporter.endActivity(this.counterVal['score'], this.counterVal['actions'], solved);
       }
 
       /**
@@ -1007,7 +1018,7 @@ define([
        * @returns {boolean} - True when the component was successfully displayed
        */
       showHelp($hlpComponent) {
-        return this.skin ? this.skin.showHelp($hlpComponent) : false
+        return this.skin ? this.skin.showHelp($hlpComponent) : false;
       }
 
       /**
@@ -1018,9 +1029,9 @@ define([
       displayURL(url, inFrame) {
         if (url) {
           if (inFrame)
-            window.open(url, this.options.infoUrlFrame)
+            window.open(url, this.options.infoUrlFrame);
           else {
-            this.end().then(() => { window.location.href = url })
+            this.end().then(() => { window.location.href = url });
           }
         }
       }
@@ -1030,7 +1041,7 @@ define([
        * @param {string} url - The URL to navigate to.
        */
       exit(url) {
-        this.displayURL(url || this.options.exitUrl, false)
+        this.displayURL(url || this.options.exitUrl, false);
       }
 
       /**
@@ -1038,7 +1049,7 @@ define([
        * @param {string} docTitle
        */
       setWindowTitle(docTitle) {
-        Utils.log('info', `running ${docTitle}`)
+        Utils.log('info', `running ${docTitle}`);
       }
     }
 
@@ -1216,7 +1227,7 @@ define([
        * @name JClicPlayer#navButtonsAlways
        * @type {boolean} */
       navButtonsAlways: false,
-    })
+    });
 
-    return JClicPlayer
-  })
+    return JClicPlayer;
+  });

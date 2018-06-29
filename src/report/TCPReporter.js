@@ -280,7 +280,8 @@ define([
           method: 'POST',
           body: `<?xml version="1.0" encoding="UTF-8"?>${Utils.serializer.serializeToString(bean.xml).replace(/minactions/g, 'minActions').replace(/reportactions/g, 'reportActions')}`,
           //mode: 'cors',
-          //credentials: 'include',
+          credentials: 'same-origin',
+          cache: 'no-cache',
           headers: {
             'Accept': 'text/xml',
             'Content-Type': 'text/xml',

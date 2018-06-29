@@ -56,40 +56,40 @@ define([
     }
 
     /**
-     * Loads the object settings from a specific JQuery XML element
-     * @param {external:jQuery} $xml
+     * Loads the object settings from a specific XML element
+     * @param {external:Element} xml
      */
-    setProperties($xml) {
+    setProperties(xml) {
 
       // Iterate on all provided attributes
-      Utils.attrForEach($xml.get(0).attributes, (name, val) => {
+      Utils.attrForEach(xml.attributes, (name, val) => {
         switch (name) {
           case 'id':
-            this['tag'] = Utils.nSlash(val)
-            break
+            this['tag'] = Utils.nSlash(val);
+            break;
           case 'name':
-            this['activityName'] = val
-            break
+            this['activityName'] = val;
+            break;
           case 'description':
           // possible navButtons values are: `none`, `fwd`, `back` or `both`
           case 'navButtons':
-            this[name] = val
-            break
+            this[name] = val;
+            break;
           case 'delay':
-            this[name] = Number(val)
-            break
+            this[name] = Number(val);
+            break;
         }
-      })
+      });
 
       // Iterate on 'jump' elements to load fwdJump and/or backJump
-      $xml.children('jump').each((_n, data) => {
-        const jmp = new ActivitySequenceJump().setProperties($(data))
+      xml.querySelectorAll('jump').forEach(jump => {
+        const jmp = new ActivitySequenceJump().setProperties(jump);
         if (jmp.id === 'forward')
-          this.fwdJump = jmp
+          this.fwdJump = jmp;
         else if (jmp.id === 'back')
-          this.backJump = jmp
-      })
-      return this
+          this.backJump = jmp;
+      });
+      return this;
     }
   }
 
@@ -133,7 +133,7 @@ define([
      * @name ActivitySequenceElement#delay
      * @type {number} */
     delay: 0,
-  })
+  });
 
-  return ActivitySequenceElement
-})
+  return ActivitySequenceElement;
+});

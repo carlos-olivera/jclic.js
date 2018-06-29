@@ -58,56 +58,56 @@ define([
      * @param {JClicProject} project - The project to which this settings belongs
      */
     constructor(project) {
-      this.project = project
-      this.languages = []
-      this.locales = []
+      this.project = project;
+      this.languages = [];
+      this.locales = [];
     }
 
     /**
-     * Reads the ProjectSettings values from a JQuery XML element
-     * @param {external:jQuery} $xml - The XML element to parse
+     * Reads the ProjectSettings values from a XML element
+     * @param {external:Element} xml - The XML element to parse
      */
-    setProperties($xml) {
-      $xml.children().each((_n, child) => {
+    setProperties(xml) {
+      xml.children.forEach(child => {
         switch (child.nodeName) {
           case 'title':
-            this.title = child.textContent
-            break
+            this.title = child.textContent;
+            break;
           case 'description':
-            this.description = child.textContent
-            break
+            this.description = child.textContent;
+            break;
           case 'language':
-            this.languages.push(child.textContent)
-            break
+            this.languages.push(child.textContent);
+            break;
           case 'eventSounds':
-            this.eventSounds = new EventSounds()
-            this.eventSounds.setProperties($(child))
-            break
+            this.eventSounds = new EventSounds();
+            this.eventSounds.setProperties(child);
+            break;
           case 'skin':
-            this.skinFileName = $(child).attr('file')
-            break
+            this.skinFileName = child.getAttribute('file');
+            break;
         }
-      })
+      });
 
       // Try to find an array of valid locales
       // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl
       if (this.languages.length > 0 && window.Intl && window.Intl.getCanonicalLocales) {
-        this.locales = []
+        this.locales = [];
         this.languages.forEach(lang => {
           // Languages usually are stored in the form: "English (en)"
-          const matches = /\(([a-z,A-Z,-]+)\)/.exec(lang)
+          const matches = /\(([a-z,A-Z,-]+)\)/.exec(lang);
           if (matches && matches.length > 1) {
             try {
-              const canonicals = window.Intl.getCanonicalLocales(matches[1])
+              const canonicals = window.Intl.getCanonicalLocales(matches[1]);
               if (canonicals)
-                this.locales = this.locales.concat(canonicals)
+                this.locales = this.locales.concat(canonicals);
             } catch (err) {
-              Utils.log('error', `Invalid language: ${lang}`)
+              Utils.log('error', `Invalid language: ${lang}`);
             }
           }
-        })
+        });
       }
-      return this
+      return this;
     }
   }
 
@@ -148,7 +148,7 @@ define([
      * @name ProjectSettings#eventSounds
      * @type {EventSounds} */
     eventSounds: new EventSounds(),
-  })
+  });
 
-  return ProjectSettings
-})
+  return ProjectSettings;
+});

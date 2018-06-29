@@ -60,22 +60,22 @@ define([
      * @param {number=} time - Delay to be applied in automatic jumps.
      */
     constructor(action, sq, threshold, time) {
-      super(action, sq)
-      this.threshold = typeof threshold === 'number' ? threshold : -1
-      this.time = typeof threshold === 'number' ? time : -1
+      super(action, sq);
+      this.threshold = typeof threshold === 'number' ? threshold : -1;
+      this.time = typeof threshold === 'number' ? time : -1;
     }
 
     /**
-     * Loads this object settings from a specific JQuery XML element
-     * @param {external:jQuery} $xml - The XML element to parse
+     * Loads this object settings from a specific XML element
+     * @param {external:Element} xml - The XML element to parse
      */
-    setProperties($xml) {
-      super.setProperties($xml)
-      if ($xml.attr('threshold') !== undefined)
-        this.threshold = $xml.attr('threshold')
-      if ($xml.attr('time') !== undefined)
-        this.time = $xml.attr('time')
-      return this
+    setProperties(xml) {
+      super.setProperties(xml);
+      if (xml.hasAttribute('threshold'))
+        this.threshold = xml.getAttribute('threshold');
+      if (xml.hasAttribute('time'))
+        this.time = xml.getAttribute('time');
+      return this;
     }
   }
 
@@ -90,7 +90,7 @@ define([
      * @name ConditionalJumpInfo#time
      * @type {number} */
     time: -1,
-  })
+  });
 
-  return ConditionalJumpInfo
-})
+  return ConditionalJumpInfo;
+});

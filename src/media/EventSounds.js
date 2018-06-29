@@ -57,23 +57,23 @@ define([
      */
     constructor(parent) {
       if (parent) {
-        this.elements = Object.assign({}, this.elements, parent.elements)
-        this.enabled = parent.enabled
+        this.elements = Object.assign({}, this.elements, parent.elements);
+        this.enabled = parent.enabled;
       }
     }
 
     /**
      * Reads the object properties from an XML element
-     * @param {external:jQuery} $xml - The XML element to be parsed
+     * @param {external} xml - The XML element to parse
      */
-    setProperties($xml) {
-      this.enabled = Utils.getTriState($xml.attr('enabled'), this.enabled)
-      $xml.children().each((_n, child) => {
-        const id = child.getAttribute('id')
-        this.elements[id] = new EventSoundsElement(id)
-        this.elements[id].setProperties($(child))
-      })
-      return this
+    setProperties(xml) {
+      this.enabled = Utils.getTriState(xml.getAttribute('enabled'), this.enabled);
+      xml.children.forEach(child => {
+        const id = child.getAttribute('id');
+        this.elements[id] = new EventSoundsElement(id);
+        this.elements[id].setProperties(child);
+      });
+      return this;
     }
 
     /**
@@ -83,7 +83,7 @@ define([
      */
     realize(ps, mediaBag) {
       // Values are {EventSoundElement} objects
-      $.each(this.elements, (key, value) => value.realize(ps, mediaBag))
+      $.each(this.elements, (key, value) => value.realize(ps, mediaBag));
     }
 
     /**
@@ -92,9 +92,9 @@ define([
      */
     play(eventName) {
       if (this.globalEnabled && this.enabled) {
-        const sound = this.elements[eventName]
+        const sound = this.elements[eventName];
         if (sound && sound.enabled)
-          sound.play()
+          sound.play();
       }
     }
   }
@@ -308,7 +308,7 @@ define([
       'Naqqqqqqqqqqqqqqqqqqqqqqqv/jIMRjEaCVZAp5hlCqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq' +
       'qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq' +
       'qqqqqqqqqqqq'
-  }
+  };
 
   Object.assign(EventSounds.prototype, {
     /**
@@ -334,7 +334,7 @@ define([
      * @name EventSounds#globalEnabled
      * @type {boolean} */
     globalEnabled: true,
-  })
+  });
 
-  return EventSounds
-})
+  return EventSounds;
+});
