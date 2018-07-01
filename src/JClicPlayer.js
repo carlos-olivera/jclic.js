@@ -286,54 +286,57 @@ define([
        * Loads and parses a `.jclic` XML file
        * @param {string} fp 
        * @param {string} fullPath 
+       * @returns {Promise}
        */
       processProjectFile(fp, fullPath) {
+        this.setWaitCursor(true);
         return fetch(fp)
           .then(response => {
             if (response.ok)
               return response.text();
             throw `Network response error ${response.status} (${response.statusText})`;
           })
-          .then(text => {
-            const data = Utils.parseXmlText(text);
-            if (data.nodeName !== 'JClicProject')
-              throw `Bad data! Project not loaded`;
-            const prj = new JClicProject();
-            prj.setProperties(data, fullPath, this.zip, this.options);
-            Utils.log('info', `Project file loaded and parsed: ${project}`);
+          .then(text => this.processProjectXML(text, fullPath))
+          .finally(() => this.setWaitCursor(false));
+      }
 
-            const elements = prj.mediaBag.buildAll(null, element => {
-              Utils.log('trace', `"${element.name}" ready.`);
-              this.incProgress(1);
-            }, this);
+      processProjectXML(xml, fullPath) {
+        const data = Utils.parseXmlText(xml);
+        if (data.nodeName !== 'JClicProject')
+          throw `Bad data! Project not loaded`;
+        const prj = new JClicProject();
+        prj.setProperties(data, fullPath, this.zip, this.options);
+        Utils.log('info', `Project file loaded and parsed: ${fullPath}`);
+        return prj;
+      }
 
-            // MOURE FORA!!!
-            Utils.log('info', `Media elements to be loaded: ${elements}`);
-            this.setProgress(0, elements);
-            let loops = 0;
-            const interval = 500;
-            this.setWaitCursor(true);
-            const checkMedia = window.setInterval(() => {
-              // Wait for a maximum time of two minutes
-              if (++loops > this.options.maxWaitTime / interval) {
-                window.clearInterval(checkMedia);
-                this.setProgress(-1);
-                this.setWaitCursor(false);
-                Utils.log('error', 'Error loading media');
-              }
-              const waitingObjects = prj.mediaBag.countWaitingElements();
-              // player.setProgress(waiting)
-              if (waitingObjects === -1) {
-                window.clearInterval(checkMedia);
-                this.setProgress(-1);
-                this.setWaitCursor(false);
-                // Call `load` again, passing the loaded [JClicProject](JClicProject.html) as a parameter
-                this.load(prj, sequence, activity);
-              }
-            }, interval);
+      waitForMedia(prj) {
+        const elements = prj.mediaBag.buildAll(null, element => {
+          Utils.log('trace', `"${element.name}" ready.`);
+          this.incProgress(1);
+        }, this);
 
-            return prj;
-          })
+        Utils.log('info', `Media elements to be loaded: ${elements}`);
+        this.setProgress(0, elements);
+        let loops = 0;
+        const interval = 500;
+
+        this.setWaitCursor(true);
+        return new Promise((resolve, reject) => {
+          const checkMedia = window.setInterval(() => {
+            // Wait for a maximum time of two minutes
+            const timeout = ++loops > this.options.maxWaitTime / interval;
+            const waitingObjects = prj.mediaBag.countWaitingElements();
+            if (waitingObjects === -1 || timeout) {
+              window.clearInterval(checkMedia);
+              this.setProgress(-1);
+              if (timeout)
+                reject('Error loading media');
+              else
+                resolve(prj);
+            }
+          }, interval);
+        })
           .finally(() => this.setWaitCursor(false));
       }
 
@@ -354,7 +357,6 @@ define([
       load(project, sequence, activity) {
 
         this.forceFinishActivity();
-        this.setWaitCursor(true);
 
         // The ActivityPanel object to be obtained as a result of the loading process
         let actp = null;
@@ -368,6 +370,7 @@ define([
 
             // Previous step: Check if `project` points to a "project.json" file
             if (fullPath.endsWith('project.json')) {
+              this.setWaitCursor(true);
               Utils.log('info', `Loading JSON info from: ${fullPath}`);
               return fetch(fullPath)
                 .then(response => {
@@ -395,6 +398,7 @@ define([
               // TODO: Implement register of zip files in PlayerHistory
               this.zip = null;
               Utils.log('info', `Loading ZIP file: ${fullPath}`);
+              this.setWaitCursor(true);
 
               // Launch loading of ZIP file in a separated thread
               return fetch(fullPath)
@@ -424,9 +428,9 @@ define([
                   // Find first file with extension '.jclic' inside the zip file
                   fileName = Object.keys(this.zip.files).find(fn => fn.endsWith('.jclic')) || null;
                   if (fileName)
-                    this.load(Utils.getPath(this.zip.zipBasePath, fileName), sequence, activity);
+                    return this.load(Utils.getPath(this.zip.zipBasePath, fileName), sequence, activity);
                   else
-                    Utils.log('error', 'This ZIP file does not contain any JClic project!');
+                    throw 'The ZIP file does not contain any JClic project!';
                 })
                 .catch(err => {
                   const errMsg = `Error loading "${project}": ${err}`;
@@ -439,7 +443,6 @@ define([
             // When in local file system, try to load `_projectname_.js`
             if (this.localFS && window.JClicObject && !window.JClicObject.projectFiles[fullPath]) {
               ScriptJS(`${fullPath}.js`, () => this.load(project, sequence, activity));
-              this.setWaitCursor(false);
               return;
             }
 
@@ -448,35 +451,47 @@ define([
             Utils.log('info', `Loading project: ${project}`);
             let fp = fullPath;
 
-            // CONTINUAR AQUÍ
-            
             // Special case for ZIP files
             if (this.zip) {
               const fName = Utils.getRelativePath(fp, this.zip.zipBasePath);
               if (this.zip.files[fName]) {
-                this.zip.file(fName).async('string')
-                  .then(text => {
-                    return this.processProjectFile(`data:text/xml;charset=UTF-8,${text}`);
-                  }).catch(reason => {
-                    Utils.log('error', `Unable to extract "${fName}" from ZIP file because of: ${reason ? reason.toString() : 'unknown reason'}`);
-                    this.setWaitCursor(false);
-                  });
-                return;
+                this.setWaitCursor(true);
+                return this.zip.file(fName).async('string')
+                  .then(text => this.processProjectXML(text, fullPath))
+                  .then(prj => this.load(prj, sequence, activity))
+                  .catch(err => {
+                    Utils.log('error', `Unable load "${fName}" from ZIP file: ${err}`);
+                  })
+                  .finally(() => this.setWaitCursor(false));
               }
             }
             // Special case for local file systems (using `file` protocol)
             else if (this.localFS) {
               // Check if file is already loaded in the global variable `JClicObject`
               if (window.JClicObject && window.JClicObject.projectFiles[fullPath]) {
-                fp = `data:text/xml;charset=UTF-8,${window.JClicObject.projectFiles[fullPath]}`;
+                //fp = `data:text/xml;charset=UTF-8,${window.JClicObject.projectFiles[fullPath]}`;
+                this.setWaitCursor(true);
+                return this.processProjectXML(window.JClicObject.projectFiles[fullPath])
+                  .then(prj => this.waitForMedia(prj))
+                  .then(prj => this.load(prj, sequence, activity))
+                  .catch(err => {
+                    Utils.log('error', `Unable load "${project}": ${err}`);
+                  })
+                  .finally(() => this.setWaitCursor(false));
               } else {
                 Utils.log('error', `Unable to load: ${fullPath}.js`);
-                this.setWaitCursor(false);
                 return;
               }
             }
-            processProjectFile(fp);
-            return;
+
+            this.setWaitCursor(true);
+            return this.processProjectFile(fp, fullPath)
+              .then(prj => this.waitForMedia(prj))
+              .then(prj => this.load(prj, sequence, activity))
+              .catch(err => {
+                Utils.log('error', `Unable load "${project}": ${err}`);
+              })
+              .finally(() => this.setWaitCursor(false));
           }
 
           // From here, assume that `project` is a [JClicProject](JClicProject.html)
@@ -550,8 +565,8 @@ define([
           if (this.options.fade > 0)
             this.actPanel.$div.css('display', 'none');
 
-          // Places the JQuery DOM element of actPanel within the player main panel
-          this.$div.prepend(this.actPanel.$div);
+          // Places actPanel within the player main panel
+          this.div.insertBefore(this.actPanel.$div[0], this.div.firstChild);
           if (this.skin)
             this.skin.resetAllCounters(false);
 
@@ -667,8 +682,8 @@ define([
 
         // Main player area settings
         const
-          width = this.dim.width = this.$div.width(),
-          height = this.dim.height = this.$div.height(),
+          width = this.dim.width = this.div.offsetWidth,
+          height = this.dim.height = this.div.offsetHeight,
           mainCss = {
             'background-color': this.actPanel ? this.actPanel.act.bgColor : 'azure',
             'background-image': ''
@@ -682,7 +697,7 @@ define([
 
           if (act.bgImageFile && act.bgImageFile.length > 0) {
             this.project.mediaBag.getElement(act.bgImageFile, true).getFullPathPromise().then(bgImageUrl => {
-              this.$div.css({
+              Utils.HTML.css(this.div, {
                 'background-image': 'url(\'' + bgImageUrl + '\')',
                 'background-repeat': act.tiledBgImg ? 'repeat' : 'no-repeat',
                 'background-position': act.tiledBgImg ? '' : 'center center'
@@ -715,7 +730,7 @@ define([
            * in narrow displays */
           this.actPanel.fitTo(proposedRect, this);
         }
-        this.$div.css(mainCss);
+        Utils.HTML.css(this.div, mainCss);
       }
 
       /**
@@ -1014,11 +1029,11 @@ define([
 
       /**
        * Shows the help info provided by the activity
-       * @param {external:jQuery} $hlpComponent - The jQuery DOM component to be shown.
+       * @param {external:Element} hlpComponent - The DOM element to be shown.
        * @returns {boolean} - True when the component was successfully displayed
        */
-      showHelp($hlpComponent) {
-        return this.skin ? this.skin.showHelp($hlpComponent) : false;
+      showHelp(hlpComponent) {
+        return this.skin ? this.skin.showHelp(hlpComponent) : false;
       }
 
       /**
@@ -1093,10 +1108,10 @@ define([
        * @type {string} */
       id: 'JC0000',
       /**
-       * The JQuery "div" element used by this player as stage for activities
-       * @name JClicPlayer#$div
-       * @type {external:jQuery} */
-      $div: null,
+       * The "div" element used by this player as stage for activities
+       * @name JClicPlayer#div
+       * @type {external:HTMLElement} */
+      div: null,
       /**
        * The top container where this player will deploy
        * @name JClicPlayer#topDiv
@@ -1104,9 +1119,9 @@ define([
       topDiv: null,
       /**
        * The main container of all JClic components
-       * @name JClicPlayer#$mainContainer
-       * @type {external:jQuery} */
-      $mainContainer: null,
+       * @name JClicPlayer#mainContainer
+       * @type {external:HTMLElement} */
+      mainContainer: null,
       /**
        * Flag indicatig that this player has switched to full screen at least once
        * @name JClicPlayer#fullScreenChecked

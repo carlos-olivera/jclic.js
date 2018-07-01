@@ -310,11 +310,11 @@ define([
       if (player !== null && player.skin !== null)
         player.skin.detach();
       this.player = player;
-      this.playerCnt.insertBefore(player.$div[0], this.playerCnt.firstChild)
+      this.playerCnt.insertBefore(player.div, this.playerCnt.firstChild)
       //this.playerCnt.appendChild(player.$div[0]);
       //this.$playerCnt.prepend(player.$div);
       this.setSkinSizes();
-      player.$mainContainer.append(this.div);
+      player.mainContainer.append(this.div);
     }
 
     /**
@@ -345,7 +345,7 @@ define([
      */
     detach() {
       if (this.player !== null) {
-        this.player.$div.remove();
+        this.player.div.remove();
         //this.$div.detach();
         this.div.remove();
         this.player = null;
@@ -720,7 +720,7 @@ define([
         status !== true && status !== false)) {
         // Save current value of fullScreen for later use
         const full = screenfull.isFullscreen;
-        screenfull.toggle(this.player.$mainContainer.get(-1));
+        screenfull.toggle(this.player.mainContainer);
         this.player.fullScreenChecked = true;
         // Firefox don't updates `document.fullscreenElement` in real time, so use the saved value instead
         this.setSkinSizes(!full);
