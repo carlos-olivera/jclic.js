@@ -48,39 +48,39 @@ define([
      * @param {JClicProject} project - The JClic project to which this content provider belongs.
      */
     constructor(project) {
-      this.project = project
+      this.project = project;
     }
 
     /**
      * Dynamic constructor that returns a specific type of AutoContentProvider based on the `class`
-     * attribute declared on an $xml element.
+     * attribute declared on an xml element.
      * It should be called only from {@link Activity#setproperties}
-     * @param {external.jQuery} $xml - The XML element to parse
+     * @param {external.Element} xml - The XML element to parse
      * @param {JClicProject} project - The JClic project to which this object will be related
      * @returns {AutoContentProvider}
      */
-    static getProvider($xml, project) {
-      let automation = null
-      if ($xml && project) {
+    static getProvider(xml, project) {
+      let automation = null;
+      if (xml && project) {
         const
-          className = ($xml.attr('class') || '').replace(/^edu\.xtec\.jclic\.automation\./, '@'),
-          cl = AutoContentProvider.CLASSES[className]
+          className = (xml.getAttribute('class') || '').replace(/^edu\.xtec\.jclic\.automation\./, '@'),
+          cl = AutoContentProvider.CLASSES[className];
         if (cl) {
-          automation = new cl(project)
-          automation.setProperties($xml)
+          automation = new cl(project);
+          automation.setProperties(xml);
         } else
-          Utils.log('error', `Unknown AutoContentProvider class: ${className}`)
+          Utils.log('error', `Unknown AutoContentProvider class: ${className}`);
       }
-      return automation
+      return automation;
     }
 
     /**
-     * Loads the object settings from a specific jQuery XML element
-     * @param {external:jQuery} $xml - The XML element to parse
+     * Loads the object settings from a specific XML element
+     * @param {external:Element} xml - The XML element to parse
      */
-    setProperties($xml) {
-      this.className = ($xml.attr('class') || '').replace(/^edu\.xtec\.jclic\.automation\./, '@')
-      return this
+    setProperties(xml) {
+      this.className = (xml.getAttribute('class') || '').replace(/^edu\.xtec\.jclic\.automation\./, '@');
+      return this;
     }
 
     /**
@@ -100,7 +100,7 @@ define([
      * @returns {boolean} - `true` if the process was OK. `false` otherwise.
      */
     generateContent(nRows, nCols, content, useIds) {
-      return this.process(new AutoContentProvider.ActiveBagContentKit(nRows, nCols, content, useIds))
+      return this.process(new AutoContentProvider.ActiveBagContentKit(nRows, nCols, content, useIds));
     }
 
     /**
@@ -110,7 +110,7 @@ define([
      */
     process(_kit) {
       // To be implemented in subclasses
-      return false
+      return false;
     }
   }
 
@@ -120,7 +120,7 @@ define([
      * @name AutoContentProvider#project
      * @type {JClicProject} */
     project: null,
-  })
+  });
 
   /**
    * Utility class used to encapsulate multiple sets of box contents
@@ -133,12 +133,12 @@ define([
    */
   AutoContentProvider.ActiveBagContentKit = class {
     constructor(nRows, nCols, content, useIds) {
-      this.nRows = nRows
-      this.nCols = nCols
-      this.content = content
-      this.useIds = useIds
+      this.nRows = nRows;
+      this.nCols = nCols;
+      this.content = content;
+      this.useIds = useIds;
     }
-  }
+  };
 
   /**
    * Contains the current list of classes derived from AutoContentProvider.
@@ -148,7 +148,7 @@ define([
   AutoContentProvider.CLASSES = {
     // TODO: Implement TagReplace
     '@tagreplace.TagReplace': AutoContentProvider
-  }
+  };
 
-  return AutoContentProvider
-})
+  return AutoContentProvider;
+});

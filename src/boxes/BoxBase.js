@@ -31,12 +31,11 @@
 /* global define */
 
 define([
-  "jquery",
   "../Utils",
   "../AWT"
-], function ($, Utils, AWT) {
+], function (Utils, AWT) {
 
-  const defaultValues = Utils.settings.BoxBase
+  const defaultValues = Utils.settings.BoxBase;
 
   /**
    * This class contains all the main visual attributes needed to draw {@link AbstractBox} objects:
@@ -57,37 +56,36 @@ define([
      * locally set.
      */
     constructor(parent) {
-      this.parent = parent || null
+      this.parent = parent || null;
     }
 
     /**
-     * Loads the BoxBase settings from a specific JQuery XML element
-     * @param {external:jQuery} $xml - The XML element to parse
+     * Loads the BoxBase settings from a specific XML element
+     * @param {external:Element} xml - The XML element to parse
      */
-    setProperties($xml) {
+    setProperties(xml) {
       //
       // Read attributes
-      Utils.attrForEach($xml.get(0).attributes, (name, val) => {
+      Utils.attrForEach(xml.attributes, (name, val) => {
         switch (name) {
           case 'shadow':
           case 'transparent':
-            this[name] = Utils.getBoolean(val, false)
-            break
+            this[name] = Utils.getBoolean(val, false);
+            break;
           case 'margin':
-            this[name] = Number(val)
-            break
+            this[name] = Number(val);
+            break;
           case 'borderStroke':
-            this.borderStroke = new AWT.Stroke(Number(val))
-            break
+            this.borderStroke = new AWT.Stroke(Number(val));
+            break;
           case 'markerStroke':
-            this.markerStroke = new AWT.Stroke(Number(val))
-            break
+            this.markerStroke = new AWT.Stroke(Number(val));
+            break;
         }
-      })
+      });
       //
       // Read inner elements
-      $xml.children().each((_n, child) => {
-        const $node = $(child)
+      xml.childNodes.forEach(child => {
         switch (child.nodeName) {
           case 'font':
             this.font = (new AWT.Font()).setProperties(child);
@@ -98,16 +96,16 @@ define([
             break;
 
           case 'color':
-            this.textColor = Utils.checkColor($node.attr('foreground'), this.textColor)
-            this.backColor = Utils.checkColor($node.attr('background'), this.backColor)
-            this.shadowColor = Utils.checkColor($node.attr('shadow'), this.shadowColor)
-            this.inactiveColor = Utils.checkColor($node.attr('inactive'), this.inactiveColor)
-            this.alternativeColor = Utils.checkColor($node.attr('alternative'), this.alternativeColor)
-            this.borderColor = Utils.checkColor($node.attr('border'), this.borderColor)
-            break
+            this.textColor = Utils.checkColor(child.getAttribute('foreground'), this.textColor);
+            this.backColor = Utils.checkColor(child.getAttribute('background'), this.backColor);
+            this.shadowColor = Utils.checkColor(child.getAttribute('shadow'), this.shadowColor);
+            this.inactiveColor = Utils.checkColor(child.getAttribute('inactive'), this.inactiveColor);
+            this.alternativeColor = Utils.checkColor(child.getAttribute('alternative'), this.alternativeColor);
+            this.borderColor = Utils.checkColor(child.getAttribute('border'), this.borderColor);
+            break;
         }
-      })
-      return this
+      });
+      return this;
     }
 
     /**
@@ -117,9 +115,9 @@ define([
      */
     get(property) {
       if (this.hasOwnProperty(property) || this.parent === null)
-        return this[property]
+        return this[property];
       else
-        return this.parent.get(property)
+        return this.parent.get(property);
     }
 
     /**
@@ -128,8 +126,8 @@ define([
      * @param {*} value - Depends on the type of property
      */
     set(property, value) {
-      this[property] = value
-      return this
+      this[property] = value;
+      return this;
     }
 
     /**
@@ -140,9 +138,9 @@ define([
      */
     getOwn(property) {
       if (this.hasOwnProperty(property))
-        return this[property]
+        return this[property];
       else if (this.parent !== null)
-        return this.parent.getOwn(property)
+        return this.parent.getOwn(property);
       else {
         // Clone prototype attribute
         if (typeof this[property] === 'object') {
@@ -153,9 +151,9 @@ define([
             this[property] = Object.assign({}, this[property]);
         }
         else
-          this[property] = BoxBase.prototype[property]
+          this[property] = BoxBase.prototype[property];
       }
-      return this[property]
+      return this[property];
     }
 
     /**
@@ -168,28 +166,28 @@ define([
      */
     getCSS(css, inactive, inverse, alternative) {
       // (css will be created by [AWT.Font.toCss](AWT.html) if null or undefined)
-      const font = this.get('font')
-      css = font.toCss(css)
+      const font = this.get('font');
+      css = font.toCss(css);
 
       css['color'] = inverse ? this.get('backColor')
         : alternative ? this.get('alternativeColor')
-          : this.get('textColor')
+          : this.get('textColor');
 
-      const transparent = this.get('transparent')
+      const transparent = this.get('transparent');
       css['background-color'] = transparent ? 'transparent'
         : inactive ? this.get('inactiveColor')
-          : inverse ? this.get('textColor') : this.get('backColor')
+          : inverse ? this.get('textColor') : this.get('backColor');
 
-      const bgGradient = this.get('bgGradient')
+      const bgGradient = this.get('bgGradient');
       if (bgGradient && !transparent)
-        css['background-image'] = bgGradient.getCss()
+        css['background-image'] = bgGradient.getCss();
 
       if (this.shadow === 1) {
-        const delta = Math.max(1, Math.round(font.size / 10))
-        const color = this.get('shadowColor')
-        css['text-shadow'] = `${delta}px ${delta}px 3px ${color}`
+        const delta = Math.max(1, Math.round(font.size / 10));
+        const color = this.get('shadowColor');
+        css['text-shadow'] = `${delta}px ${delta}px 3px ${color}`;
       }
-      return css
+      return css;
     }
 
     /**
@@ -207,42 +205,42 @@ define([
       const
         result = [],
         font = this.get('font'),
-        height = font.getHeight()
-      let totalHeight = 0
+        height = font.getHeight();
+      let totalHeight = 0;
 
       // divide the text in lines
-      const lines = text.trim().split('\n')
-      ctx.font = font.cssFont()
+      const lines = text.trim().split('\n');
+      ctx.font = font.cssFont();
       for (let l = 0; l < lines.length; l++) {
-        let line = lines[l].trim()
-        let width = ctx.measureText(line).width
+        let line = lines[l].trim();
+        let width = ctx.measureText(line).width;
         if (width > maxWidth) {
           // retain the last string offset that was inside maxWidth
           let
             lastOK = 0,
-            lastOKWidth = 0
+            lastOKWidth = 0;
           for (let p = 0; p < line.length; p++) {
             // Find next separator
             if (Utils.isSeparator(line[p])) {
-              const w = ctx.measureText(line.substr(0, p).trim()).width
+              const w = ctx.measureText(line.substr(0, p).trim()).width;
               if (w > maxWidth)
-                break
-              lastOK = p
-              lastOKWidth = w
+                break;
+              lastOK = p;
+              lastOKWidth = w;
             }
           }
           if (lastOK > 0) {
             // Add a new line with the tail of the line
-            lines.splice(l + 1, 0, line.substr(lastOK + 1).trim())
+            lines.splice(l + 1, 0, line.substr(lastOK + 1).trim());
             // Adjust the current line
-            line = lines[l] = line.substr(0, lastOK).trim()
-            width = lastOKWidth
+            line = lines[l] = line.substr(0, lastOK).trim();
+            width = lastOKWidth;
           }
           else {
             // No solution found. Try resizing down the font.
             if (font.size > defaultValues.MIN_FONT_SIZE) {
-              this.getOwn('font').zoom(-1)
-              return this.prepareText(ctx, text, maxWidth, maxHeight)
+              this.getOwn('font').zoom(-1);
+              return this.prepareText(ctx, text, maxWidth, maxHeight);
             }
           }
         }
@@ -251,17 +249,17 @@ define([
         result.push({
           text: line,
           size: new AWT.Dimension(width, height)
-        })
+        });
 
-        totalHeight += height
+        totalHeight += height;
 
         if (totalHeight > maxHeight && font.size > defaultValues.MIN_FONT_SIZE) {
           // Max height exceeded. Try resizing down the font
-          this.getOwn('font').zoom(-1)
-          return this.prepareText(ctx, text, maxWidth, maxHeight)
+          this.getOwn('font').zoom(-1);
+          return this.prepareText(ctx, text, maxWidth, maxHeight);
         }
       }
-      return result
+      return result;
     }
   }
 
@@ -360,9 +358,9 @@ define([
      * @name BoxBase#markerStroke
      * @type {AWT.Stroke} */
     markerStroke: new AWT.Stroke(defaultValues.MARKER_STROKE_WIDTH),
-  })
+  });
 
-  BoxBase.prototype.defaultBoxBase = new BoxBase()
+  BoxBase.prototype.defaultBoxBase = new BoxBase();
 
-  return BoxBase
-})
+  return BoxBase;
+});

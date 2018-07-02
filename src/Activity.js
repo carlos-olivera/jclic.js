@@ -31,7 +31,6 @@
 /* global define */
 
 define([
-  "jquery",
   "./Utils",
   "./AWT",
   "./media/EventSounds",
@@ -42,7 +41,7 @@ define([
   "./boxes/TextGridContent",
   "./activities/text/Evaluator",
   "./activities/text/TextActivityDocument"], function (
-    $, Utils, AWT, EventSounds, ActiveBoxContent, ActiveBagContent,
+    Utils, AWT, EventSounds, ActiveBoxContent, ActiveBagContent,
     BoxBase, AutoContentProvider, TextGridContent, Evaluator, TextActivityDocument) {
 
     // Direct access to global setings
@@ -75,20 +74,20 @@ define([
 
       /**
        * Factory constructor that returns a specific type of Activity based on the `class` attribute
-       * declared in the $xml parameter.
-       * @param {external:jQuery} $xml - The XML element to be parsed
+       * declared in the xml parameter.
+       * @param {external:Element} xml - The XML element to be parsed
        * @param {JClicProject} project - The {@link JClicProject} to which this activity belongs
        * @returns {Activity}
        */
-      static getActivity($xml, project) {
+      static getActivity(xml, project) {
         let act = null;
-        if ($xml && project) {
+        if (xml && project) {
           const
-            className = ($xml.attr('class') || '').replace(/^edu\.xtec\.jclic\.activities\./, '@'),
+            className = (xml.getAttribute('class') || '').replace(/^edu\.xtec\.jclic\.activities\./, '@'),
             cl = Activity.CLASSES[className];
           if (cl) {
             act = new cl(project);
-            act.setProperties($xml);
+            act.setProperties(xml);
           } else
             Utils.log('error', `Unknown activity class: ${className}`);
         }
@@ -97,12 +96,12 @@ define([
 
       /**
        * Loads this object settings from an XML element
-       * @param {external:jQuery} $xml - The jQuery XML element to parse
+       * @param {external:Element} xml - The XML element to parse
        */
-      setProperties($xml) {
+      setProperties(xml) {
 
         // Read attributes
-        Utils.attrForEach($xml.get(0).attributes, (name, val) => {
+        Utils.attrForEach(xml.attributes, (name, val) => {
           switch (name) {
             // Generic attributes:
             case 'name':
@@ -131,12 +130,11 @@ define([
         });
 
         // Read specific nodes
-        $xml.children().each((_n, child) => {
-          const $node = $(child);
+        xml.childNodes.forEach(child => {
           switch (child.nodeName) {
             case 'settings':
               // Read more attributes
-              Utils.attrForEach($node.get(0).attributes, (name, val) => {
+              Utils.attrForEach(child.attributes, (name, val) => {
                 switch (name) {
                   case 'infoUrl':
                   case 'infoCmd':
@@ -163,35 +161,33 @@ define([
               });
 
               // Read elements of _settings_
-              $node.children().each((_n, child) => {
-                const $node = $(child);
+              child.childNodes.forEach(child => {
                 switch (child.nodeName) {
                   case 'skin':
-                    this.skinFileName = $node.attr('file');
+                    this.skinFileName = child.getAttribute('file');
                     break;
 
                   case 'helpWindow':
                     this.helpMsg = Utils.getXmlText(child);
-                    this.showSolution = Utils.getBoolean($node.attr('showSolution'), false);
+                    this.showSolution = Utils.getBoolean(child.getAttribute('showSolution'), false);
                     this.helpWindow = this.helpMsg !== null || this.showSolution;
                     break;
 
                   case 'container':
                     // Read settings related to the 'container'
                     // (the main panel containing the activity and other elements)
-                    this.bgColor = Utils.checkColor($node.attr('bgColor'), Utils.settings.BoxBase.BACK_COLOR);
+                    this.bgColor = Utils.checkColor(child.getAttribute('bgColor'), Utils.settings.BoxBase.BACK_COLOR);
 
-                    $node.children().each((_n, child) => {
-                      const $child = $(child);
+                    child.childNodes.forEach(child => {
                       switch (child.nodeName) {
                         case 'image':
-                          this.bgImageFile = $child.attr('name');
-                          this.tiledBgImg = Utils.getBoolean($child.attr('tiled'), false);
+                          this.bgImageFile = child.getAttribute('name');
+                          this.tiledBgImg = Utils.getBoolean(child.getAttribute('tiled'), false);
                           break;
                         case 'counters':
-                          this.bTimeCounter = Utils.getBoolean($child.attr('time'), true);
-                          this.bActionsCounter = Utils.getBoolean($child.attr('actions'), true);
-                          this.bScoreCounter = Utils.getBoolean($child.attr('score'), true);
+                          this.bTimeCounter = Utils.getBoolean(child.getAttribute('time'), true);
+                          this.bActionsCounter = Utils.getBoolean(child.getAttribute('actions'), true);
+                          this.bScoreCounter = Utils.getBoolean(child.getAttribute('score'), true);
                           break;
                         case 'gradient':
                           this.bgGradient = new AWT.Gradient().setProperties(child);
@@ -203,10 +199,10 @@ define([
                   case 'window':
                     // Read settings related to the 'window'
                     // (the panel where the activity deploys its content)
-                    this.activityBgColor = Utils.checkColor($node.attr('bgColor'), K.DEFAULT_BG_COLOR);
-                    this.transparentBg = Utils.getBoolean($node.attr('transparent'), false);
-                    this.border = Utils.getBoolean($node.attr('border'), false);
-                    $node.children().each((_n, child) => {
+                    this.activityBgColor = Utils.checkColor(child.getAttribute('bgColor'), K.DEFAULT_BG_COLOR);
+                    this.transparentBg = Utils.getBoolean(child.getAttribute('transparent'), false);
+                    this.border = Utils.getBoolean(child.getAttribute('border'), false);
+                    child.childNodes.forEach(child => {
                       switch (child.nodeName) {
                         case 'gradient':
                           this.activityBgGradient = new AWT.Gradient().setProperties(child);
@@ -225,15 +221,15 @@ define([
                   case 'eventSounds':
                     // eventSounds is already created in constructor,
                     // just read properties
-                    this.eventSounds.setProperties($node[0]);
+                    this.eventSounds.setProperties(child);
                     break;
                 }
               });
               break;
 
             case 'messages':
-              $node.children('cell').each((_n, child) => {
-                const m = this.readMessage($(child));
+              child.querySelectorAll('cell').forEach(child => {
+                const m = this.readMessage(child);
                 // Possible message types are: `initial`, `final`, `previous`, `finalError`
                 this.messages[m.type] = m;
               });
@@ -241,13 +237,13 @@ define([
 
             case 'automation':
               // Read the automation settings ('Arith' or other automation engines)
-              this.acp = AutoContentProvider.getProvider($node, this.project);
+              this.acp = AutoContentProvider.getProvider(child, this.project);
               break;
 
             // Settings specific to panel-type activities (puzzles, associations...)
             case 'cells':
               // Read the [ActiveBagContent](ActiveBagContent.html) objects
-              const cellSet = new ActiveBagContent().setProperties($node, this.project.mediaBag);
+              const cellSet = new ActiveBagContent().setProperties(child, this.project.mediaBag);
               // Valid ids:
               // - Panel activities: 'primary', 'secondary', solvedPrimary'
               // - Textpanel activities: 'acrossClues', 'downClues', 'answers'
@@ -256,13 +252,13 @@ define([
 
             case 'scramble':
               // Read the 'scramble' mode
-              this.shuffles = Number($node.attr('times'));
-              this.scramble.primary = Utils.getBoolean($node.attr('primary'));
-              this.scramble.secondary = Utils.getBoolean($node.attr('secondary'));
+              this.shuffles = Number(child.getAttribute('times'));
+              this.scramble.primary = Utils.getBoolean(child.getAttribute('primary'));
+              this.scramble.secondary = Utils.getBoolean(child.getAttribute('secondary'));
               break;
 
             case 'layout':
-              Utils.attrForEach($node.get(0).attributes, (name, value) => {
+              Utils.attrForEach(child.attributes, (name, value) => {
                 switch (name) {
                   case 'position':
                     this.boxGridPos = value;
@@ -278,11 +274,11 @@ define([
             // Element specific to {@link Menu} activities:
             case 'menuElement':
               this.menuElements.push({
-                caption: $node.attr('caption') || '',
-                icon: $node.attr('icon') || null,
-                projectPath: $node.attr('path') || null,
-                sequence: $node.attr('sequence') || null,
-                description: $node.attr('description') || ''
+                caption: child.getAttribute('caption') || '',
+                icon: child.getAttribute('icon') || null,
+                projectPath: child.getAttribute('path') || null,
+                sequence: child.getAttribute('sequence') || null,
+                description: child.getAttribute('description') || ''
               });
               break;
 
@@ -290,7 +286,7 @@ define([
             // {@link WordSearch} activities:
             case 'textGrid':
               // Read the 'textGrid' element into a {@link TextGridContent}
-              this.tgc = new TextGridContent().setProperties($node);
+              this.tgc = new TextGridContent().setProperties(child);
               break;
 
             // Read the clues of {@link WordSearch} activities

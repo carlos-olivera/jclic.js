@@ -31,13 +31,12 @@
 /* global define */
 
 define([
-  "jquery",
   "./BoxBase",
   "./ActiveBoxContent",
   "../shapers/Shaper",
   "../AWT",
   "../Utils"
-], function ($, BoxBase, ActiveBoxContent, Shaper, AWT, Utils) {
+], function (BoxBase, ActiveBoxContent, Shaper, AWT, Utils) {
 
   /**
    * This class packs a collection of {@link ActiveBoxContent} objects and provides methods to access
@@ -64,12 +63,12 @@ define([
 
     /**
      * Loads the object settings from a specific JQuery XML element
-     * @param {external:jQuery} $xml - The XML element to parse
+     * @param {external:Element} xml - The XML element to parse
      * @param {MediaBag} mediaBag - The project's MediaBag
      */
-    setProperties($xml, mediaBag) {
+    setProperties(xml, mediaBag) {
       let bug = false;
-      Utils.attrForEach($xml.get(0).attributes, (name, val) => {
+      Utils.attrForEach(xml.attributes, (name, val) => {
         switch (name) {
           case 'id':
             this.id = val;
@@ -106,25 +105,24 @@ define([
         this.nch = n;
       }
 
-      $xml.children().each((_n, child) => {
-        const $node = $(child);
+      xml.childNodes.forEach(child => {
         switch (child.nodeName) {
           case 'style':
-            this.bb = new BoxBase(null).setProperties($node);
+            this.bb = new BoxBase(null).setProperties(child);
             break;
           case 'shaper':
-            const shaperClassName = $node.attr('class'),
-              nCols = Math.max(1, $node.attr('cols')),
-              nRows = Math.max(1, $node.attr('rows'));
+            const shaperClassName = child.getAttribute('class'),
+              nCols = Math.max(1, child.getAttribute('cols')),
+              nRows = Math.max(1, child.getAttribute('rows'));
             this.shaper = Shaper.getShaper(shaperClassName, nCols, nRows);
-            this.shaper.setProperties($node[0]);
+            this.shaper.setProperties(child);
             break;
           case 'ids':
             // Used in special cases where all cells have empty content with only 'ids'
             child.textContent.split(' ').forEach((id, i) => { this.activeBoxContentArray[i] = new ActiveBoxContent(Number(id)) });
             break;
           case 'cell':
-            this.activeBoxContentArray.push(new ActiveBoxContent().setProperties($node, mediaBag));
+            this.activeBoxContentArray.push(new ActiveBoxContent().setProperties(child, mediaBag));
             break;
         }
       });

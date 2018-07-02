@@ -31,12 +31,11 @@
 /* global define */
 
 define([
-  "jquery",
   "../AWT",
   "../Utils",
   "./BoxBase",
   "../media/MediaContent"
-], function ($, AWT, Utils, BoxBase, MediaContent) {
+], function (AWT, Utils, BoxBase, MediaContent) {
 
   /**
    * This class defines a content that can be displayed by {@link ActiveBox} objects. This content
@@ -53,81 +52,80 @@ define([
      */
     constructor(id) {
       if (typeof id !== 'undefined')
-        this.id = id
-      this.imgAlign = { h: 'middle', v: 'middle' }
-      this.txtAlign = { h: 'middle', v: 'middle' }
+        this.id = id;
+      this.imgAlign = { h: 'middle', v: 'middle' };
+      this.txtAlign = { h: 'middle', v: 'middle' };
     }
 
     /**
      *
-     * Loads settings from a specific JQuery XML element
-     * @param {external:jQuery} $xml - The XML element to be parsed
+     * Loads settings from a specific XML element
+     * @param {external:Element} xml - The XML element to be parsed
      * @param {MediaBag} mediaBag - The media bag used to retrieve images and other media
      */
-    setProperties($xml, mediaBag) {
+    setProperties(xml, mediaBag) {
       //
       // Read attributes
-      Utils.attrForEach($xml.get(0).attributes, (name, val) => {
+      Utils.attrForEach(xml.attributes, (name, val) => {
         switch (name) {
           case 'id':
           case 'item':
-            this[name] = Number(val)
-            break
+            this[name] = Number(val);
+            break;
 
           case 'width':
           case 'height':
             if (this.dimension === null)
-              this.dimension = new AWT.Dimension(0, 0)
-            this.dimension[name] = Number(val)
-            break
+              this.dimension = new AWT.Dimension(0, 0);
+            this.dimension[name] = Number(val);
+            break;
 
           case 'txtAlign':
           case 'imgAlign':
-            this[name] = this.readAlign(val)
-            break
+            this[name] = this.readAlign(val);
+            break;
 
           case 'hAlign':
             // Old style
-            this['txtAlign'] = this.readAlign(val + ',center')
-            this['imgAlign'] = this.readAlign(val + ',center')
-            break
+            this['txtAlign'] = this.readAlign(val + ',center');
+            this['imgAlign'] = this.readAlign(val + ',center');
+            break;
 
           case 'border':
           case 'avoidOverlapping':
-            this[name] = Utils.getBoolean(val)
-            break
+            this[name] = Utils.getBoolean(val);
+            break;
 
           case 'image':
-            this.imgName = Utils.nSlash(val)
-            break
+            this.imgName = Utils.nSlash(val);
+            break;
         }
-      })
+      });
 
       //
       // Read inner elements
-      $xml.children().each((_n, child) => {
-        const $node = $(child)
+      xml.childNodes.forEach(child => {
         switch (child.nodeName) {
           case 'style':
-            this.bb = new BoxBase(null).setProperties($node)
-            break
+            this.bb = new BoxBase(null).setProperties(child);
+            break;
           case 'media':
-            this.mediaContent = new MediaContent().setProperties($node)
-            break
+            this.mediaContent = new MediaContent().setProperties(child);
+            break;
           case 'p':
             if (this.text === null)
-              this.text = ''
+              this.text = '';
             else
-              this.text += '\n'
-            this.text += child.textContent
-            break
+              this.text += '\n';
+            this.text += child.textContent;
+            break;
         }
-      })
+      });
 
       if (mediaBag)
-        this.realizeContent(mediaBag)
+        this.realizeContent(mediaBag);
 
-      return this
+      return this;
     }
 
     /**
@@ -137,20 +135,20 @@ define([
      * @returns {ActiveBoxContent~alignType}
      */
     readAlign(str) {
-      const align = { h: 'center', v: 'center' }
+      const align = { h: 'center', v: 'center' };
       if (str) {
-        const v = str.split(',')
-        align.h = v[0].replace('middle', 'center')
-        align.v = v[1].replace('middle', 'center')
+        const v = str.split(',');
+        align.h = v[0].replace('middle', 'center');
+        align.v = v[1].replace('middle', 'center');
       }
-      return align
+      return align;
     }
 
     /**
      * Checks if this is an empty content (`text` and `img` are _null_)
      */
     isEmpty() {
-      return this.text === null && this.img === null
+      return this.text === null && this.img === null;
     }
 
     /**
@@ -161,11 +159,11 @@ define([
      */
     isEquivalent(abc, checkCase) {
       if (abc === this)
-        return true
-      let result = false
+        return true;
+      let result = false;
       if (abc !== null) {
         if (this.isEmpty() && abc.isEmpty())
-          result = this.id === abc.id
+          result = this.id === abc.id;
         else
           result = (this.text === null ? abc.text === null
             : checkCase ? this.text === abc.text
@@ -176,9 +174,9 @@ define([
             ) &&
             this.img === abc.img &&
             (this.imgClip === null ? abc.imgClip === null
-              : this.imgClip.equals(abc.imgClip))
+              : this.imgClip.equals(abc.imgClip));
       }
-      return result
+      return result;
     }
 
     /**
@@ -188,11 +186,11 @@ define([
     setTextContent(tx) {
       // only plain text allowed!
       if (tx !== null) {
-        this.text = tx
-        this.checkHtmlText()
+        this.text = tx;
+        this.checkHtmlText();
       } else {
-        this.text = null
-        this.innerHtmlText = null
+        this.text = null;
+        this.innerHtmlText = null;
       }
     }
 
@@ -200,14 +198,14 @@ define([
      * Checks if cell's text uses HTML, initializing the `innerHtmlText` member as needed.
      */
     checkHtmlText() {
-      this.innerHtmlText = null
+      this.innerHtmlText = null;
       if (Utils.startsWith(this.text, '<html>', true)) {
-        const htmlText = this.text.trim()
-        const s = htmlText.toLocaleLowerCase()
+        const htmlText = this.text.trim();
+        const s = htmlText.toLocaleLowerCase();
         if (s.indexOf('<body') === -1) {
-          const s2 = s.indexOf('</html>')
+          const s2 = s.indexOf('</html>');
           if (s2 >= 0)
-            this.innerHtmlText = htmlText.substr(6, s2)
+            this.innerHtmlText = htmlText.substr(6, s2);
         }
       }
     }
@@ -221,11 +219,11 @@ define([
      * @param {string=} animatedGifFile - When `img` is an animated GIF, its file name
      */
     setImgContent(img, imgClip, animatedGifFile) {
-      this.img = img
-      this.imgName = null
-      this.imgClip = imgClip
+      this.img = img;
+      this.imgName = null;
+      this.imgClip = imgClip;
       if (animatedGifFile)
-        this.animatedGifFile = animatedGifFile
+        this.animatedGifFile = animatedGifFile;
     }
 
     /**
@@ -234,8 +232,8 @@ define([
      */
     prepareMedia(playStation) {
       if (!this.amp && this.mediaContent && this.mediaContent.mediaType === 'PLAY_VIDEO') {
-        this.amp = playStation.getActiveMediaPlayer(this.mediaContent)
-        this.amp.realize()
+        this.amp = playStation.getActiveMediaPlayer(this.mediaContent);
+        this.amp.realize();
       }
     }
 
@@ -245,21 +243,21 @@ define([
      */
     realizeContent(mediaBag) {
       if (this.imgName !== null && this.imgName.length > 0) {
-        this.mbe = mediaBag.getElement(this.imgName, true)
+        this.mbe = mediaBag.getElement(this.imgName, true);
         if (this.mbe) {
           this.mbe.build(() => {
-            this.img = this.mbe.data
-            this.animatedGifFile = this.mbe.animated ? this.mbe.getFullPath() : null
-          })
+            this.img = this.mbe.data;
+            this.animatedGifFile = this.mbe.animated ? this.mbe.getFullPath() : null;
+          });
         }
       }
       if (this.mediaContent !== null) {
         if (this.imgName === null && (this.text === null || this.text.length === 0)) {
-          this.img = this.mediaContent.getIcon()
-          this.animatedGifFile = null
+          this.img = this.mediaContent.getIcon();
+          this.animatedGifFile = null;
         }
       }
-      this.checkHtmlText(mediaBag)
+      this.checkHtmlText(mediaBag);
     }
 
     /**
@@ -268,16 +266,16 @@ define([
      * @returns {string}
      */
     getDescription() {
-      let result = this.text && this.text.length > 0 ? this.text : ''
+      let result = this.text && this.text.length > 0 ? this.text : '';
       if (this.imgName)
-        result = `${result}${result.length > 0 ? ' ' : ''}${Utils.getMsg('image')} ${this.imgName}`
+        result = `${result}${result.length > 0 ? ' ' : ''}${Utils.getMsg('image')} ${this.imgName}`;
       if (this.imgClip)
-        result = `${result}${result.length > 0 ? ' ' : ''}${this.imgClip.toString()}`
+        result = `${result}${result.length > 0 ? ' ' : ''}${this.imgClip.toString()}`;
 
       if (this.mediaContent)
-        result = `${result}${result.length > 0 ? ' ' : ''}${this.mediaContent.getDescription()}`
+        result = `${result}${result.length > 0 ? ' ' : ''}${this.mediaContent.getDescription()}`;
 
-      return result
+      return result;
     }
 
     /**
@@ -286,13 +284,13 @@ define([
      * @returns {String}
      */
     toString() {
-      let result = this.text && this.text.length > 0 ? this.text : ''
+      let result = this.text && this.text.length > 0 ? this.text : '';
       if (this.imgName)
-        result = `${result}${result.length > 0 ? ' ' : ''}${Utils.getMsg('image')} ${this.imgName}`
+        result = `${result}${result.length > 0 ? ' ' : ''}${Utils.getMsg('image')} ${this.imgName}`;
       if (this.imgClip)
-        result = `${result}${result.length > 0 ? ' ' : ''}${Utils.getMsg('image fragment')}`
+        result = `${result}${result.length > 0 ? ' ' : ''}${Utils.getMsg('image fragment')}`;
 
-      return result
+      return result;
     }
   }
 
@@ -393,12 +391,12 @@ define([
      * @name ActiveBoxContent#mbe
      * @type {MediaBagElement} */
     mbe: null,
-  })
+  });
 
   /**
    * An empty ActiveBoxContent
    * @type {ActiveBoxContent} */
-  ActiveBoxContent.EMPTY_CONTENT = new ActiveBoxContent()
+  ActiveBoxContent.EMPTY_CONTENT = new ActiveBoxContent();
 
-  return ActiveBoxContent
-})
+  return ActiveBoxContent;
+});

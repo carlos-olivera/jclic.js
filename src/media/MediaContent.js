@@ -31,10 +31,9 @@
 /* global define */
 
 define([
-  "jquery",
   "../AWT",
   "../Utils"
-], function ($, AWT, Utils) {
+], function (AWT, Utils) {
 
   /**
    * This object contains a description of any multimedia content (sound, video, MIDI, voice
@@ -52,62 +51,62 @@ define([
      * @param {string=} mediaFileName - Optional parameter indicating the media file name
      */
     constructor(type, mediaFileName) {
-      this.mediaType = type
+      this.mediaType = type;
       if (mediaFileName)
-        this.mediaFileName = mediaFileName
+        this.mediaFileName = mediaFileName;
     }
 
     /**
-     * Loads the MediaContent settings from a specific JQuery XML element
-     * @param {external:jQuery} $xml
+     * Loads the MediaContent settings from a specific XML element
+     * @param {external:Element} xml
      */
-    setProperties($xml) {
-      Utils.attrForEach($xml.get(0).attributes, (name, val) => {
+    setProperties(xml) {
+      Utils.attrForEach(xml.attributes, (name, val) => {
         switch (name) {
           case 'type':
-            this['mediaType'] = val
-            break
+            this['mediaType'] = val;
+            break;
           case 'file':
-            this['mediaFileName'] = Utils.nSlash(val)
-            break
+            this['mediaFileName'] = Utils.nSlash(val);
+            break;
           case 'params':
-            this['externalParam'] = Utils.nSlash(val)
-            break
+            this['externalParam'] = Utils.nSlash(val);
+            break;
 
           case 'pFrom':
-            this['absLocationFrom'] = val
-            break
+            this['absLocationFrom'] = val;
+            break;
 
           case 'buffer':
-            this['recBuffer'] = Number(val)
-            break
+            this['recBuffer'] = Number(val);
+            break;
           case 'level':
           case 'from':
           case 'to':
           case 'length':
-            this[name] = Number(val)
-            break
+            this[name] = Number(val);
+            break;
 
           case 'px':
           case 'py':
             if (this.absLocation === null)
-              this.absLocation = new AWT.Point(0, 0)
+              this.absLocation = new AWT.Point(0, 0);
             if (name === 'px')
-              this.absLocation.x = Number(val)
+              this.absLocation.x = Number(val);
             else
-              this.absLocation.y = Number(val)
-            break
+              this.absLocation.y = Number(val);
+            break;
 
           case 'stretch':
           case 'free':
           case 'catchMouseEvents':
           case 'loop':
           case 'autostart':
-            this[name] = Utils.getBoolean(val)
-            break
+            this[name] = Utils.getBoolean(val);
+            break;
         }
-      })
-      return this
+      });
+      return this;
     }
 
     /**
@@ -122,7 +121,7 @@ define([
           this.mediaFileName.toLocaleLowerCase() === mc.mediaFileName.toLocaleLowerCase()) &&
         this.from === mc.from &&
         this.to === mc.to &&
-        this.recBuffer === mc.recBuffer
+        this.recBuffer === mc.recBuffer;
     }
 
     /**
@@ -131,12 +130,12 @@ define([
      * @returns {string}
      */
     getDescription() {
-      let result = `${this.mediaType}`
+      let result = `${this.mediaType}`;
       if (this.mediaFileName)
-        result = `${result} ${this.mediaFileName}${this.from >= 0 ? ` from:${this.from}` : ''}${this.to >= 0 ? ` to:${this.to}` : ''}`
+        result = `${result} ${this.mediaFileName}${this.from >= 0 ? ` from:${this.from}` : ''}${this.to >= 0 ? ` to:${this.to}` : ''}`;
       else if (this.externalParam)
-        result = `${result} ${this.externalParam}`
-      return result
+        result = `${result} ${this.externalParam}`;
+      return result;
     }
 
     /**
@@ -144,7 +143,7 @@ define([
      * @returns {string} 
      */
     toString() {
-      return `${this.mediaType}${this.mediaFileName ? ` ${this.mediaFileName}` : ''}`
+      return `${this.mediaType}${this.mediaFileName ? ` ${this.mediaFileName}` : ''}`;
     }
 
     /**
@@ -152,29 +151,29 @@ define([
      * @returns {external:HTMLImageElement}
      */
     getIcon() {
-      let icon = null
+      let icon = null;
       switch (this.mediaType) {
         case 'PLAY_AUDIO':
         case 'PLAY_RECORDED_AUDIO':
-          icon = 'audio'
-          break
+          icon = 'audio';
+          break;
         case 'RECORD_AUDIO':
-          icon = 'mic'
-          break
+          icon = 'mic';
+          break;
         case 'PLAY_VIDEO':
-          icon = 'movie'
-          break
+          icon = 'movie';
+          break;
         case 'PLAY_MIDI':
-          icon = 'music'
-          break
+          icon = 'music';
+          break;
         case 'URL':
-          icon = 'url'
-          break
+          icon = 'url';
+          break;
         default:
-          icon = 'default'
-          break
+          icon = 'default';
+          break;
       }
-      return icon ? MediaContent.ICONS[icon] : null
+      return icon ? MediaContent.ICONS[icon] : null;
     }
   }
 
@@ -263,7 +262,7 @@ define([
      * @name MediaContent#autoStart
      * @type {boolean} */
     autoStart: false,
-  })
+  });
 
   /**
    * Default icons for media types.
@@ -314,20 +313,20 @@ define([
       'LjU0Yy0uMjYtLjgxLTEtMS4zOS0xLjktMS4zOWgtMXYtM2MwLS41NS0uNDUtMS0xLTFIOHYtMmgy' +
       'Yy41NSAwIDEtLjQ1IDEtMVY3aDJjMS4xIDAgMi0uOSAyLTJ2LS40MWMyLjkzIDEuMTkgNSA0LjA2' +
       'IDUgNy40MSAwIDIuMDgtLjggMy45Ny0yLjEgNS4zOXoiPjwvcGF0aD48L3N2Zz4K'
-  }
+  };
 
   /**
    * Collection of icon {@link external:HTMLImageElement} objects
    * @name MediaContent.ICONS
    * @type {object} */
-  MediaContent.ICONS = {}
+  MediaContent.ICONS = {};
 
   // Load the icons
-  $.each(ICONS, (key, value) => {
-    const img = new Image()
-    img.src = value
-    MediaContent.ICONS[key] = img
-  })
+  Object.keys(ICONS).forEach(key => {
+    const img = new Image();
+    img.src = ICONS[key];
+    MediaContent.ICONS[key] = img;
+  });
 
-  return MediaContent
-})
+  return MediaContent;
+});
