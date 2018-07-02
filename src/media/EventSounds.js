@@ -68,7 +68,7 @@ define([
      */
     setProperties(xml) {
       this.enabled = Utils.getTriState(xml.getAttribute('enabled'), this.enabled);
-      xml.children.forEach(child => {
+      xml.querySelectorAll('sound').forEach(child => {
         const id = child.getAttribute('id');
         this.elements[id] = new EventSoundsElement(id);
         this.elements[id].setProperties(child);

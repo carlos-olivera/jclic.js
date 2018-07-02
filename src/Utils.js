@@ -35,10 +35,9 @@ define([
   "clipboard-js",
   "i18next",
   "jszip",
-  "jszip-utils",
   "scriptjs",
   "webfontloader"
-], function (screenfull, clipboard, i18next, JSZip, JSZipUtils, ScriptJS, WebFont) {
+], function (screenfull, clipboard, i18next, JSZip, ScriptJS, WebFont) {
 
   // In some cases, require.js does not return a valid value for screenfull. Check it:
   if (!screenfull)
@@ -72,7 +71,6 @@ define([
         ClipboardJS: clipboard,
         i18next: i18next,
         JSZip: JSZip,
-        JSZipUtils: JSZipUtils,
         ScriptJS: ScriptJS,
         WebFont: WebFont,
       };

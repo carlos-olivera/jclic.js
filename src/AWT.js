@@ -255,9 +255,9 @@ define([
       // Place the div on the document and measure relative offsets
       document.body.appendChild(div);
       try {
-        Utils.HTML.css(block, { verticalAlign: 'baseline' });
+        Utils.HTML.css(block, { 'vertical-align': 'baseline' });
         this._metrics.ascent = block.offsetTop - text.offsetTop;
-        Utils.HTML.css(block, { verticalAlign: 'bottom' });
+        Utils.HTML.css(block, { 'vertical-align': 'bottom' });
         this._metrics.height = block.offsetTop - text.offsetTop;
         this._metrics.descent = this._metrics.height - this._metrics.ascent;
       } finally {

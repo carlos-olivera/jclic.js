@@ -225,7 +225,7 @@ define([
                   case 'eventSounds':
                     // eventSounds is already created in constructor,
                     // just read properties
-                    this.eventSounds.setProperties($node);
+                    this.eventSounds.setProperties($node[0]);
                     break;
                 }
               });

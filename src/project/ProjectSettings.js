@@ -31,10 +31,9 @@
 /* global define, window */
 
 define([
-  "jquery",
   "../media/EventSounds",
   "../Utils"
-], function ($, EventSounds, Utils) {
+], function (EventSounds, Utils) {
 
   /**
    * This class contains miscellaneous settings of JClic projects.
@@ -68,7 +67,7 @@ define([
      * @param {external:Element} xml - The XML element to parse
      */
     setProperties(xml) {
-      xml.children.forEach(child => {
+      xml.childNodes.forEach(child => {
         switch (child.nodeName) {
           case 'title':
             this.title = child.textContent;
