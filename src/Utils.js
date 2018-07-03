@@ -253,7 +253,41 @@ define([
      * @returns {boolean}
      */
     static isEquivalent(a, b) {
-      return (typeof a === 'undefined' || a === null) && (typeof b === 'undefined' || b === null) || a === b;
+      return (typeof a === 'undefined' || a === null) && (typeof b === 'undefined' || b === null)
+        || a === b
+        || typeof JSON.stringify(a) !== 'undefined' && typeof JSON.stringify(b) !== 'undefined' && JSON.stringify(a) === JSON.stringify(b);
+    }
+
+    /**
+     * Makes a deep clone of the provided object
+     * See: https://stackoverflow.com/questions/122102/what-is-the-most-efficient-way-to-deep-clone-an-object-in-javascript/5344074#5344074
+     * @param {object} obj - The object to be cloned
+     * @returns {object}
+     */
+    static deepClone(obj) {
+      return JSON.parse(JSON.stringify(obj || {}));
+    }
+
+    /**
+     * Makes a deep copy of one object into another, combining its properties like in `jQuery.extend(true,...)`
+     * Based on: https://blog.garstasio.com/you-dont-need-jquery/utils/
+     * @param {object} a - First (target) object 
+     * @param {object} b - A second object, to be combined with `a`
+     * @returns {object} - Always returns `a`
+     */
+    static extend(a, b) {
+      b = b || {};
+      Object.keys(b).forEach(key => {
+        const val = b[key];
+        // Is this value an object?  If so, iterate over its properties, copying them over
+        if (val && Object.prototype.toString.call(val) === "[object Object]") {
+          a[key] = a[key] || {};
+          Utils.extend(a[key], val);
+        }
+        else
+          a[key] = val;
+      });
+      return a;
     }
 
     /**

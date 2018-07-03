@@ -294,8 +294,8 @@ define([
               // Read the array of clues
               this.clues = [];
               this.clueItems = [];
-              $node.children('clue').each((n, child) => {
-                this.clueItems[n] = Number($(child).attr('id'));
+              child.querySelectorAll('clue').forEach((child, n) => {
+                this.clueItems[n] = Number(child.getAttribute('id'));
                 this.clues[n] = child.textContent;
               });
               break;
@@ -307,11 +307,11 @@ define([
 
             case 'prevScreen':
               this.prevScreen = true;
-              this.prevScreenMaxTime = $node.attr('maxTime') || -1;
-              $node.children().each((_n, child) => {
+              this.prevScreenMaxTime = child.getAttribute('maxTime') || -1;
+              child.childNodes.forEach(child => {
                 switch (child.nodeName) {
                   case 'style':
-                    this.prevScreenStyle = new BoxBase().setProperties($(child));
+                    this.prevScreenStyle = new BoxBase().setProperties(child);
                     break;
                   case 'p':
                     if (this.prevScreenText === null)
@@ -323,12 +323,12 @@ define([
               break;
 
             case 'evaluator':
-              this.ev = Evaluator.getEvaluator($node);
+              this.ev = Evaluator.getEvaluator(child);
               break;
 
             case 'document':
               // Read main document of text activities
-              this.document = new TextActivityDocument().setProperties($node, this.project.mediaBag);
+              this.document = new TextActivityDocument().setProperties(child, this.project.mediaBag);
               break;
           }
         });
@@ -337,14 +337,14 @@ define([
 
       /**
        * Read an activity message from an XML element
-       * @param {external:jQuery} $xml - The XML element to be parsed
+       * @param {external:Element} xml - The XML element to be parsed
        * @returns {ActiveBoxContent}
        */
-      readMessage($xml) {
-        const msg = new ActiveBoxContent().setProperties($xml, this.project.mediaBag);
+      readMessage(xml) {
+        const msg = new ActiveBoxContent().setProperties(xml, this.project.mediaBag);
         //
         // Allowed types are: `initial`, `final`, `previous`, `finalError`
-        msg.type = $xml.attr('type');
+        msg.type = xml.getAttribute('type');
         // Check for `null` or `undefined`
         if (msg.bb == null)
           msg.bb = new BoxBase(null);
@@ -365,11 +365,12 @@ define([
        */
       prepareMedia(ps) {
         this.eventSounds.realize(ps, this.project.mediaBag);
-        $.each(this.messages, (_key, msg) => {
-          if (msg !== null) msg.prepareMedia(ps);
+        this.messages.forEach(msg => {
+          if (msg)
+            msg.prepareMedia(ps);
         });
-        $.each(this.abc, (_key, abc) => {
-          if (abc !== null)
+        this.abc.forEach(abc => {
+          if (abc)
             abc.prepareMedia(ps);
         });
         return true;
@@ -772,19 +773,16 @@ define([
        * @param {JClicPlayer} ps - Any object implementing the methods defined in the
        * {@link http://projectestac.github.io/jclic/apidoc/edu/xtec/jclic/PlayStation.html PlayStation}
        * Java interface.
-       * @param {external:jQuery=} $div - The jQuery DOM element where this Panel will deploy
+       * @param {external:jQuery=} div - The DOM element where this Panel will deploy
        */
-      constructor(act, ps, $div) {
+      constructor(act, ps, div) {
         // ActivityPanel extends AWT.Container
         super();
         this.act = act;
         this.ps = ps;
         this.minimumSize = new AWT.Dimension(100, 100);
         this.preferredSize = new AWT.Dimension(500, 400);
-        if ($div)
-          this.$div = $div;
-        else
-          this.$div = $('<div/>', { class: 'JClicActivity', 'aria-label': ps.getMsg('Activity panel') });
+        this.div = div || Utils.HTML.div(null, 'JClicActivity', null, { 'aria-label': ps.getMsg('Activity panel') });
         this.accessibleCanvas = Utils.settings.CANVAS_HITREGIONS;
         this.act.initAutoContentProvider();
       }
@@ -800,12 +798,12 @@ define([
         this.dim.height = rect.dim.height;
 
         this.invalidate(rect);
-        this.$div.css({
+        Utils.HTML.css(this.div, {
           position: 'relative',
           left: rect.pos.x,
           top: rect.pos.y,
           width: rect.dim.width,
-          height: rect.dim.height
+          height: rect.dim.height,
         });
       }
 
@@ -849,7 +847,7 @@ define([
         if (this.act.activityBgGradient)
           cssAct['background-image'] = this.act.activityBgGradient.getCss();
 
-        this.$div.css(cssAct);
+        Utils.HTML.css(this.div, cssAct);
       }
 
       /**
@@ -919,13 +917,13 @@ define([
       }
 
       /**
-       * Attaches the events specified in the `events` member to the `$div` member
+       * Attaches the events specified in the `events` member to the `div` member
        */
       attachEvents() {
-        this.events.forEach(ev => this.attachEvent(this.$div, ev));
+        this.events.forEach(ev => this.attachEvent(this.div, ev));
         // Prepare handler to check if we are in a touch device
-        if (!K.TOUCH_DEVICE && $.inArray(TOUCH_TEST_EVENT, this.events) === -1)
-          this.attachEvent(this.$div, TOUCH_TEST_EVENT);
+        if (!K.TOUCH_DEVICE && !this.events.includes(TOUCH_TEST_EVENT))
+          this.attachEvent(this.div, TOUCH_TEST_EVENT);
       }
 
       /**
