@@ -928,22 +928,23 @@ define([
 
       /**
        * Attaches a single event to the specified object
-       * @param {external:jQuery} $obj - The object to which the event will be attached
+       * @param {external:EventTarget} obj - The object to which the event will be attached
        * @param {string} evt - The event name
        */
-      attachEvent($obj, evt) {
-        $obj.on(evt, this, event => {
+      attachEvent(obj, evt) {
+        const handler = event => {
           if (event.type === TOUCH_TEST_EVENT) {
             if (!K.TOUCH_DEVICE)
               K.TOUCH_DEVICE = true;
-            if ($.inArray(TOUCH_TEST_EVENT, this.events) === -1) {
+            if (!this.events.includes(TOUCH_TEST_EVENT)) {
               // Disconnect handler
-              $obj.off(TOUCH_TEST_EVENT);
+              obj.removeEventListener(evt, handler);
               return;
             }
           }
           return event.data.processEvent.call(event.data, event);
-        });
+        };
+        obj.addEventListener(evt, handler);
       }
 
       /**
@@ -996,9 +997,9 @@ define([
        */
       buildAccessibleComponents() {
         // Clear existing elements
-        if (this.accessibleCanvas && this.$canvas && this.$canvas.children().length > 0) {
-          this.$canvas.get(-1).getContext('2d').clearHitRegions();
-          this.$canvas.empty();
+        if (this.accessibleCanvas && this.canvas && this.canvas.children().length > 0) {
+          this.canvas.get(-1).getContext('2d').clearHitRegions();
+          this.canvas.empty();
         }
         // Create accessible elements in subclasses
       }
@@ -1111,15 +1112,15 @@ define([
        * @type {Activity} */
       act: null,
       /**
-       * The jQuery div element used by this panel
-       * @name ActivityPanel#$div
-       * @type {external:jQuery} */
-      $div: null,
+       * The div element used by this panel
+       * @name ActivityPanel#div
+       * @type {external:HTMLElement} */
+      div: null,
       /**
-       * The jQuery main canvas element used by this panel
-       * @name ActivityPanel#$canvas
-       * @type {external:jQuery} */
-      $canvas: null,
+       * The main canvas element used by this panel
+       * @name ActivityPanel#canvas
+       * @type {external:HTMLElement} */
+      canvas: null,
       /**
        * True when the navigator implements canvas hit regions
        * See: https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Hit_regions_and_accessibility
@@ -1134,14 +1135,14 @@ define([
       skin: null,
       /**
        * Background element (currently a `span`) used to place animated GIFs when needed
-       * @name ActivityPanel#$animatedBg
-       * @type {external:jQuery} */
-      $animatedBg: null,
+       * @name ActivityPanel#animatedBg
+       * @type {external:HTMLElement} */
+      animatedBg: null,
       /**
        * Additional background element for animated GIFs, used in associations
-       * @name ActivityPanel#$animatedBgB
-       * @type {external:jQuery} */
-      $animatedBgB: null,
+       * @name ActivityPanel#animatedBgB
+       * @type {external:HTMLElement} */
+      animatedBgB: null,
       /**
        * `true` when the activity is solved, `false` otherwise
        * @name ActivityPanel#solved

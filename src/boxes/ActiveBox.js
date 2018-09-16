@@ -31,13 +31,12 @@
 /* global define */
 
 define([
-  "jquery",
   "./AbstractBox",
   "./ActiveBoxContent",
   "./ActiveBagContent",
   "../AWT",
   "../Utils"
-], function ($, AbstractBox, ActiveBoxContent, ActiveBagContent, AWT, Utils) {
+], function (AbstractBox, ActiveBoxContent, ActiveBagContent, AWT, Utils) {
 
   /**
    * Objects of this class are widely used in JClic activities: cells in puzzles and associations,
@@ -79,23 +78,23 @@ define([
 
     /**
      * Factory constructor that creates a new cell inside a JQuery DOM element.
-     * @param {external:jQuery} $dom - The DOM element that will act as a container
+     * @param {external:HTMLElement} dom - The DOM element that will act as a container
      * @param {ActiveBoxContent} abc - The cell's content. Must not be null and have the `dimension`
      * member initialized.
      * @returns {ActiveBox}
      */
-    static createCell($dom, abc) {
+    static createCell(dom, abc) {
       if (abc && abc.dimension) {
         const
           box = new ActiveBox(),
-          $canvas = $('<canvas width="' + abc.dimension.width + '" height="' + abc.dimension.height + '"/>'),
-          rect = new AWT.Rectangle(0, 0, abc.dimension.width, abc.dimension.height);
+          canvas = Utils.HTML.element('canvas', null, null, null, abc.dimension),
+          rect = new AWT.Rectangle(0, 0, abc.dimension);
         box.container = new AWT.Container();
-        box.container.$div = $dom;
+        box.container.div = dom;
         box.setContent(abc);
         box.setBounds(rect);
-        $dom.append($canvas);
-        box.update($canvas.get(-1).getContext('2d'), rect);
+        Utils.HTML.append(dom, canvas);
+        box.update(canvas.getContext('2d'), rect);
         return box;
       }
     }
@@ -129,8 +128,8 @@ define([
       if (!this.hasHostedComponent)
         this.setHostedComponent(null);
       this.setHostedMediaPlayer(null);
-      if (this.$accessibleElement)
-        this.$accessibleElement.html('');
+      if (this.accessibleElement)
+        this.accessibleElement.innerHtml = '';
       if (this.tmpTrans)
         this.tmpTrans = false;
       this.invalidate();
@@ -197,8 +196,8 @@ define([
       this.setHostedMediaPlayer(bx.hostedMediaPlayer);
       if (this.hostedMediaPlayer)
         this.hostedMediaPlayer.setVisualComponentVisible(!this.isInactive() && this.isVisible());
-      if (this.$accessibleElement)
-        this.$accessibleElement.html(this.toString());
+      if (this.accessibleElement)
+        this.accessibleElement.innerHtml = this.toString();
     }
 
     /**
@@ -233,8 +232,8 @@ define([
       this.checkHostedComponent();
       this.setHostedMediaPlayer(null);
 
-      if (this.$accessibleElement)
-        this.$accessibleElement.html(this.toString());
+      if (this.accessibleElement)
+        this.accessibleElement.innerHtml = this.toString();
     }
 
     /**
@@ -276,23 +275,23 @@ define([
       if (abc) {
         if (abc.animatedGifFile && !this.specialShape) {
           const url = `url(${abc.animatedGifFile})`;
-          const $hc = $('<span/>').css({
+          const hc = Utils.HTML.element('span', null, null, {
             'background-image': url,
             'background-position': 'center',
             'background-repeat': 'no-repeat'
           });
           // Save background image for later use
-          $hc.data('background-image', url);
+          hc.dataset.backgroundImage = url;
 
           if (abc.imgClip !== null) {
-            $hc.css({
+            Utils.HTML.css(hc, {
               'background-origin': 'border-box',
               'background-position': `${-abc.imgClip.pos.x}px ${-abc.imgClip.pos.y}px`
               // TODO: Use background-size only when the original image must be compressed
               //,'background-size': abc.imgClip.dim.width + 'px ' + abc.imgClip.dim.height + 'px'
             });
           }
-          this.setHostedComponent($hc);
+          this.setHostedComponent(hc);
         }
 
         if (abc.bb !== this.boxBase)
@@ -312,8 +311,8 @@ define([
         this.clear();
 
       this.invalidate();
-      if (this.$accessibleElement)
-        this.$accessibleElement.html(this.toString());
+      if (this.accessibleElement)
+        this.accessibleElement.innerHtml = this.toString();
     }
 
     /**
@@ -335,9 +334,9 @@ define([
       if (this.isAlternative() && this.hostedMediaPlayer)
         this.setHostedMediaPlayer(null);
 
-      if (this.$accessibleElement) {
-        this.$accessibleElement.html(this.toString());
-        this.$accessibleElement.prop('disabled', true);
+      if (this.accessibleElement) {
+        this.accessibleElement.innerHtml = this.toString();
+        Utils.HTML.attributes(this.accessibleElement, { disabled: true });
       }
     }
 
@@ -366,8 +365,8 @@ define([
       this.checkHostedComponent();
       this.checkAutoStartMedia();
 
-      if (this.$accessibleElement)
-        this.$accessibleElement.html(this.toString());
+      if (this.accessibleElement)
+        this.accessibleElement.innerHtml = this.toString();
 
       return true;
     }
@@ -644,13 +643,13 @@ define([
     }
 
     /**
-     * Places and resizes {@link AbstractBox#$hostedComponent $hostedComponent}, based on the size
+     * Places and resizes {@link AbstractBox#hostedComponent hostedComponent}, based on the size
      * and position of this box.
      * @override
      * @param {boolean} sizeChanged - `true` when this {@link ActiveBox} has changed its size
      */
     setHostedComponentBounds(sizeChanged) {
-      if (this.$hostedComponent) {
+      if (this.hostedComponent) {
         super.setHostedComponentBounds(sizeChanged);
         const abc = this.getCurrentContent();
         if (sizeChanged && abc && abc.animatedGifFile && abc.img) {
@@ -665,17 +664,17 @@ define([
               scale = Math.min(this.dim.width / r.dim.width, this.dim.height / r.dim.height);
               bgSize = `${w * scale}px ${h * scale}px`;
             }
-            this.$hostedComponent.css({
+            Utils.HTML.css(this.hostedComponent, {
               'background-position': `${-abc.imgClip.pos.x * scale}px ${-abc.imgClip.pos.y * scale}px`,
-              'background-size': bgSize
+              'background-size': bgSize,
             });
           } else {
             if (this.dim.width < w || this.dim.height < h) {
               scale = Math.min(this.dim.width / w, this.dim.height / h);
               bgSize = `${w * scale}px ${h * scale}px`;
             }
-            this.$hostedComponent.css({
-              'background-size': bgSize
+            Utils.HTML.css(this.hostedComponent, {
+              'background-size': bgSize,
             });
           }
         }
@@ -688,44 +687,43 @@ define([
      * The button will be created only when `CanvasRenderingContext2D` has a method named `addHitRegion`.
      * See https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Hit_regions_and_accessibility
      * for more information and supported browsers.
-     * @param {external:jQuery} $canvas - The `canvas` where this `ActiveBox` will deploy, wrapped up in a jQuery object
-     * @param {external:jQuery} $clickReceiver - The DOM element that will be notified  when `$accessibleElement` is activated.
-     * @param {external:jQuery=} $canvasGroup - Optional DOM element containing the accessible element. Useful to group cells in associations. When `null`, the element belongs to $canvas.
+     * @param {external:HTMLElement} canvas - The `canvas` where this `ActiveBox` will deploy
+     * @param {external:HTMLElement} clickReceiver - The DOM element that will be notified  when `$accessibleElement` is activated.
+     * @param {external:HTMLElement=} canvasGroup - Optional DOM element containing the accessible element. Useful to group cells in associations. When `null`, the element belongs to canvas.
      * @param {string=} eventType - Type of event sent to $clickReceiver. Default is `click`.
-     * @returns {external:jQuery} - The accessible element associated to this ActiveBox.
+     * @returns {external:HTMLElement} - The accessible element associated to this ActiveBox.
      */
-    buildAccessibleElement($canvas, $clickReceiver, $canvasGroup, eventType) {
+    buildAccessibleElement(canvas, clickReceiver, canvasGroup, eventType) {
       if (Utils.settings.CANVAS_HITREGIONS) {
-        if (this.$accessibleElement)
-          this.$accessibleElement.remove();
+        if (this.accessibleElement)
+          this.accessibleElement.remove();
 
-        const canvas = $canvas.get(-1);
         if (canvas.width > 0 && canvas.height > 0) {
           const
             id = Math.round(Math.random() * 100000),
             disabled = this.isInactive() && !this.accessibleAlwaysActive;
-          this.$accessibleElement = $('<button/>', {
+          this.accessibleElement = Utils.HTML.element('button', null, null, null, {
             tabindex: disabled ? -1 : 0,
             id: `AE${id}`,
             disabled: disabled
-          })
-            .html(this.toString())
-            .click(ev => {
-              // Check if event was produced by a mouse click
-              if (ev.originalEvent && (ev.originalEvent.pageX !== 0 || ev.originalEvent.pageY !== 0)) {
-                // Mouse clicks should be processed odirectly by the canvas, so ignore this accessible event
-                return true;
-              }
-              Utils.log('debug', `Click on accessible element: ${this.toString()}`);
-              const
-                $event = $.Event(eventType || 'click'),
-                bounds = this.getBounds(),
-                offset = $canvas.offset();
-              $event.pageX = offset.left + bounds.pos.x + bounds.dim.width / 2;
-              $event.pageY = offset.top + bounds.pos.y + bounds.dim.height / 2;
-              $clickReceiver.trigger($event);
-              return false;
-            });
+          });
+          this.accessibleElement.innerHtml = this.toString();
+          this.accessibleElement.addEventListener('click', ev => {
+            // Check if event was produced by a mouse click
+            if (ev.originalEvent && (ev.originalEvent.pageX !== 0 || ev.originalEvent.pageY !== 0)) {
+              // Mouse clicks should be processed odirectly by the canvas, so ignore this accessible event
+              return true;
+            }
+            Utils.log('debug', `Click on accessible element: ${this.toString()}`);
+            const
+              $event = $.Event(eventType || 'click'),
+              bounds = this.getBounds(),
+              offset = $canvas.offset();
+            $event.pageX = offset.left + bounds.pos.x + bounds.dim.width / 2;
+            $event.pageY = offset.top + bounds.pos.y + bounds.dim.height / 2;
+            $clickReceiver.trigger($event);
+            return false;
+          });
           const $dest = $canvasGroup || $canvas;
           $dest.append(this.$accessibleElement);
           const elem = this.$accessibleElement.get(-1);

@@ -310,7 +310,7 @@ define([
       if (player !== null && player.skin !== null)
         player.skin.detach();
       this.player = player;
-      this.playerCnt.insertBefore(player.div, this.playerCnt.firstChild)
+      this.playerCnt.insertBefore(player.div, this.playerCnt.firstChild);
       //this.playerCnt.appendChild(player.$div[0]);
       //this.$playerCnt.prepend(player.$div);
       this.setSkinSizes();

@@ -649,6 +649,15 @@ define([
             element.removeChild(element.firstChild);
           return element;
         }
+
+        static offset(element) {
+          // See: http://youmightnotneedjquery.com/#offset
+          const rect = element.getBoundingClientRect();
+          return {
+            top: rect.top + document.body.scrollTop,
+            left: rect.left + document.body.scrollLeft
+          };
+        }
       };
     }
 

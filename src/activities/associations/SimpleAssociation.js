@@ -31,13 +31,13 @@
 /* global define */
 
 define([
-  "jquery",
   "../../Activity",
   "../../boxes/ActiveBoxGrid",
   "../../boxes/BoxBag",
   "../../boxes/BoxConnector",
-  "../../AWT"
-], function ($, Activity, ActiveBoxGrid, BoxBag, BoxConnector, AWT) {
+  "../../AWT",
+  "../../Utils",
+], function (Activity, ActiveBoxGrid, BoxBag, BoxConnector, AWT, Utils) {
 
   /**
    * This class of {@link Activity} uses two panels (`primary` and `secondary`) formed by
@@ -116,10 +116,10 @@ define([
      * @param {JClicPlayer} ps - Any object implementing the methods defined in the
      * [PlayStation](http://projectestac.github.io/jclic/apidoc/edu/xtec/jclic/PlayStation.html)
      * Java interface.
-     * @param {external:jQuery=} $div - The jQuery DOM element where this Panel will deploy
+     * @param {external:HTMLElement=} div - The DOM element where this Panel will deploy
      */
-    constructor(act, ps, $div) {
-      super(act, ps, $div);
+    constructor(act, ps, div) {
+      super(act, ps, div);
     }
 
     /**
@@ -155,24 +155,28 @@ define([
       if (abcA && abcB) {
         if (abcA.imgName) {
           abcA.setImgContent(this.act.project.mediaBag, null, false);
-          if (abcA.animatedGifFile && !abcA.shaper.rectangularShapes && !this.act.scramble['primary'])
-            this.$animatedBg = $('<span/>').css({
+          if (abcA.animatedGifFile && !abcA.shaper.rectangularShapes && !this.act.scramble['primary']) {
+            this.animatedBg = Utils.HTML.element('span', null, null, {
               'background-image': `url(${abcA.animatedGifFile})`,
               'background-position': 'center',
               'background-repeat': 'no-repeat',
               position: 'absolute'
-            }).appendTo(this.$div);
+            });
+            Utils.HTML.append(this.div, this.animatedBg);
+          }
         }
 
         if (abcB.imgName) {
           abcB.setImgContent(this.act.project.mediaBag, null, false);
-          if (abcB.animatedGifFile && !abcB.shaper.rectangularShapes && !this.act.scramble['secondary'])
-            this.$animatedBgB = $('<span/>').css({
+          if (abcB.animatedGifFile && !abcB.shaper.rectangularShapes && !this.act.scramble['secondary']) {
+            this.animatedBgB = Utils.HTML.element('span', null, null, {
               'background-image': `url(${abcB.animatedGifFile})`,
               'background-position': 'center',
               'background-repeat': 'no-repeat',
               position: 'absolute'
-            }).appendTo(this.$div);
+            });
+            Utils.HTML.append(this.div, this.animatedBgB);
+          }
         }
 
         if (solved && solved.imgName)
@@ -189,11 +193,11 @@ define([
         this.bgB = ActiveBoxGrid.createEmptyGrid(null, this, this.act.margin, this.act.margin, abcB);
 
         this.bgA.setContent(abcA, solved ? solved : null);
-        if (this.$animatedBg)
+        if (this.animatedBg)
           this.bgA.setCellAttr('tmpTrans', true);
 
         this.bgB.setContent(abcB);
-        if (this.$animatedBgB)
+        if (this.animatedBgB)
           this.bgB.setCellAttr('tmpTrans', true);
 
         this.bgA.accessibleText = this.ps.getMsg('source');
@@ -244,12 +248,10 @@ define([
      */
     updateContent(dirtyRegion) {
       super.updateContent(dirtyRegion);
-      if (this.bgA && this.bgB && this.$canvas) {
-        const
-          canvas = this.$canvas.get(-1),
-          ctx = canvas.getContext('2d');
+      if (this.bgA && this.bgB && this.canvas) {
+        const ctx = this.canvas.getContext('2d');
         if (!dirtyRegion)
-          dirtyRegion = new AWT.Rectangle(0, 0, canvas.width, canvas.height);
+          dirtyRegion = new AWT.Rectangle(0, 0, this.canvas.width, this.canvas.height);
         ctx.clearRect(dirtyRegion.pos.x, dirtyRegion.pos.y, dirtyRegion.dim.width, dirtyRegion.dim.height);
         this.bgA.update(ctx, dirtyRegion);
         this.bgB.update(ctx, dirtyRegion);
@@ -275,21 +277,18 @@ define([
      * @param {AWT.Rectangle} rect
      */
     setBounds(rect) {
-      if (this.$canvas)
-        this.$canvas.remove();
+      if (this.canvas)
+        this.canvas.remove();
 
       super.setBounds(rect);
       if (this.bgA || this.bgB) {
         // Create the main canvas
-        this.$canvas = $(`<canvas width="${rect.dim.width}" height="${rect.dim.height}"/>`).css({
-          position: 'absolute',
-          top: 0,
-          left: 0
-        });
+        this.canvas = Utils.HTML.element('canvas', null, null, { position: 'absolute', top: 0, left: 0, }, rect.dim);
+
         // Resize animated gif background A
-        if (this.$animatedBg && this.bgA) {
+        if (this.animatedBg && this.bgA) {
           const bgRect = this.bgA.getBounds();
-          this.$animatedBg.css({
+          Utils.HTML.css(this.animatedBg, {
             left: bgRect.pos.x,
             top: bgRect.pos.y,
             width: bgRect.dim.width + 'px',
@@ -298,9 +297,9 @@ define([
           });
         }
         // Resize animated gif background B
-        if (this.$animatedBgB && this.bgB) {
+        if (this.animatedBgB && this.bgB) {
           const bgRectB = this.bgB.getBounds();
-          this.$animatedBgB.css({
+          Utils.HTML.css(this.animatedBgB, {
             left: bgRectB.pos.x,
             top: bgRectB.pos.y,
             width: bgRectB.dim.width + 'px',
@@ -308,10 +307,10 @@ define([
             'background-size': `${bgRectB.dim.width}px ${bgRectB.dim.height}px`
           });
         }
-        this.$div.append(this.$canvas);
+        Utils.HTML.append(this.div, this.canvas);
 
         // Create a [BoxConnector](BoxConnector.html) and attach it to the canvas context
-        this.bc = new BoxConnector(this, this.$canvas.get(-1).getContext('2d'));
+        this.bc = new BoxConnector(this, this.canvas.getContext('2d'));
 
         // Repaint all
         this.invalidate().update();
@@ -325,12 +324,12 @@ define([
      * @override
      */
     buildAccessibleComponents() {
-      if (this.$canvas && this.accessibleCanvas) {
+      if (this.canvas && this.accessibleCanvas) {
         super.buildAccessibleComponents();
         if (this.bgA)
-          this.bgA.buildAccessibleElements(this.$canvas, this.$div, 'mousedown');
+          this.bgA.buildAccessibleElements(this.canvas, this.div, 'mousedown');
         if (this.bgB)
-          this.bgB.buildAccessibleElements(this.$canvas, this.$div, 'mousedown');
+          this.bgB.buildAccessibleElements(this.canvas, this.div, 'mousedown');
       }
     }
 
