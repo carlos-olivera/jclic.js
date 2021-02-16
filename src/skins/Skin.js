@@ -136,7 +136,7 @@ define([
       this.$dlgMainPanel = $('<div/>', { class: 'dlgMainPanel', id: ps.getUniqueId('ReportsCnt') })
       this.$dlgBottomPanel = $('<div/>', { class: 'dlgBottomPanel', role: 'navigation' })
 
-      // Basic dialog structure:
+      // Basic dialog structuvvre:
       this.$div.append(
         this.$playerCnt,
         this.$dlgOverlay.append(
@@ -147,15 +147,15 @@ define([
       msg = ps.getMsg('JClic logo')
       this.$infoHead = $('<div/>', { class: 'infoHead' })
         .append($('<div/>', { class: 'headTitle unselectableText' })
-          .append($(this.appLogo, { 'aria-label': msg }).css({ width: '1.5em', height: '1.5em', 'vertical-align': 'bottom' })
+          .append($(this.appImage, { 'aria-label': msg }).css({ width: '1.5em', height: '1.5em', 'vertical-align': 'bottom' })
             .dblclick(() => {
               // Double click on JClic logo is a hidden method to increase verbosity on Javascript console
               Utils.setLogLevel('all')
               Utils.log('trace', 'Log level set to "trace"')
             }))
-          .append($('<span/>').html('JClic.js')))
+          .append($('<span/>').html('Footprints')))
         .append($('<p/>').css({ 'margin-top': 0, 'margin-left': '3.5em' })
-          .append($('<a/>', { href: 'http://clic.xtec.cat/repo/index.html?page=info' }).html('http://clic.xtec.cat'))
+          .append($('<a/>', { href: 'https://footprintsbolivia.com/' }).html('http://footprintsbolivia.com'))
           .append($('<br>'))
           .append($('<span/>').html(ps.getMsg('Version') + ' ' + this.ps.JClicVersion)))
 
@@ -1040,6 +1040,7 @@ define([
      * JClic logo
      * @name Skin#appLogo
      * @type {string} */
+    appImage: '<img src="https://footprintsbolivia.com/wp-content/uploads/2021/02/footprintslogo.png" width="64" height="64"/>',
     appLogo: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g transform="matrix(.02081 0 0-.02081 5 62.33)">\
 <path d="m1263 1297l270 1003 996-267-267-990c-427-1583-2420-1046-1999 519 3 11 999-266 999-266z" fill="none" stroke="#9d6329" stroke-linejoin="round" stroke-linecap="round" stroke-width="180" stroke-miterlimit="3.864"/>\
 <path d="m1263 1297l270 1003 996-267-267-990c-427-1583-2420-1046-1998 519 3 11 999-266 999-266" fill="#f89c0e"/>\
